@@ -311,11 +311,10 @@ components:
       properties:
         type:
           type: string
-          enum: [submarine, reverse, chain]
+          enum: [submarine, reverse]
           description: |
             - submarine: ETH/ERC20 -> BTC
             - reverse: BTC -> ETH/ERC20
-            - chain: BTC -> BTC (different addresses)
         amount:
           type: string
           description: Amount in satoshis (for BTC) or wei (for ETH)
@@ -341,7 +340,7 @@ components:
           format: uuid
         type:
           type: string
-          enum: [submarine, reverse, chain]
+          enum: [submarine, reverse]
         amount:
           type: string
           description: Expected output amount
@@ -379,7 +378,7 @@ components:
       properties:
         type:
           type: string
-          enum: [submarine, reverse, chain]
+          enum: [submarine, reverse]
         quoteId:
           type: string
           format: uuid
@@ -418,7 +417,7 @@ components:
           format: uuid
         type:
           type: string
-          enum: [submarine, reverse, chain]
+          enum: [submarine, reverse]
         status:
           type: string
           enum: [created, waiting_payment, funded, claimed, refunded, expired]

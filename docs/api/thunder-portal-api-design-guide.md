@@ -30,16 +30,15 @@ Bitcoin operations are inherently asynchronous. The API provides:
 
 ### Swap Types
 
-The API supports three swap types to cover all use cases:
+The API supports two swap types for Fusion+ integration:
 
 ```yaml
 type:
-  enum: [submarine, reverse, chain]
+  enum: [submarine, reverse]
 ```
 
 - **Submarine**: ETH/ERC20 → BTC (user sends on-chain, receives Bitcoin)
 - **Reverse**: BTC → ETH/ERC20 (user sends Bitcoin, receives on-chain)
-- **Chain**: BTC → BTC (atomic swap between Bitcoin addresses)
 
 ### HTLC Lifecycle
 

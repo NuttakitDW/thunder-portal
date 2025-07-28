@@ -31,11 +31,10 @@
 1. **Hash Lock**: Funds can be claimed by revealing a secret (preimage) where SHA256(preimage) = hash
 2. **Time Lock**: Funds can be refunded to original owner after a timeout period
 
-### Q: What's the difference between submarine, reverse, and chain swaps?
+### Q: What's the difference between submarine and reverse swaps?
 **A:** Based on our API design:
 - **Submarine swap**: ETH/ERC20 → BTC (user sends on Ethereum, receives Bitcoin)
 - **Reverse swap**: BTC → ETH/ERC20 (user sends Bitcoin, receives on Ethereum)
-- **Chain swap**: BTC → BTC (atomic swap between different Bitcoin addresses)
 
 ## Architecture Questions
 
