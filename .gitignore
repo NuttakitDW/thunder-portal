@@ -48,3 +48,5 @@ debug/
 *.pid
 *.seed
 *.pid.lock
+
+.claude

@@ -17,7 +17,9 @@ thunder-portal/
 │   ├── implementation/         # Code guides
 │   ├── planning/              # Strategy docs
 │   └── reference/             # External docs
-├── openapi-spec.yaml          # Main API spec
+├── api/
+│   ├── cross-chain-swap-api.yaml  # Main API spec
+│   └── bitcoin-htlc-api.yaml      # Bitcoin HTLC API
 └── README.md                  # Project overview
 ```
 

@@ -11,7 +11,7 @@ Thunder Portal enables atomic swaps between 1inch Fusion+ (Ethereum) and Bitcoin
 
 ### 2. Technical Architecture
 - [Architecture Summary](./architecture-summary.md) - High-level system design
-- [Bitcoin HTLC Implementation Plan](./bitcoin-htlc-implementation-plan.md) - Detailed HTLC implementation guide
+- [Bitcoin HTLC Implementation](./implementation/bitcoin-htlc-implementation.md) - Detailed HTLC implementation guide
 - [Bitcoin Resolver API Specification](./bitcoin-resolver-api-specification.md) - API endpoints and integration
 
 ### 3. Reference Documents
@@ -23,7 +23,7 @@ Thunder Portal enables atomic swaps between 1inch Fusion+ (Ethereum) and Bitcoin
 ### For Developers
 1. Start with [Architecture Summary](./architecture-summary.md)
 2. Implement [Bitcoin API](./bitcoin-resolver-api-specification.md)
-3. Follow [HTLC Implementation](./bitcoin-htlc-implementation-plan.md)
+3. Follow [HTLC Implementation](./implementation/bitcoin-htlc-implementation.md)
 
 ### For Judges/Reviewers
 1. Read [Thunder Portal Concept](./thunder-portal-concept.md)
@@ -38,7 +38,8 @@ thunder-portal/
 ├── docs/                        # Documentation
 │   ├── thunder-portal-concept.md       # Vision & concept
 │   ├── architecture-summary.md         # System design
-│   ├── bitcoin-htlc-implementation-plan.md    # HTLC guide
+│   ├── implementation/
+│   │   └── bitcoin-htlc-implementation.md    # HTLC guide
 │   ├── bitcoin-resolver-api-specification.md  # API spec
 │   └── reference/               # Supporting documents
 ├── src/                         # Source code (to be created)

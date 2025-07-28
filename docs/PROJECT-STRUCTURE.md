@@ -5,7 +5,9 @@
 ```
 thunder-portal/
 ├── README.md                    # Main project documentation
-├── openapi-spec.yaml           # API specification (source of truth)
+├── api/
+│   ├── cross-chain-swap-api.yaml  # Main Cross-Chain Swap API spec
+│   └── bitcoin-htlc-api.yaml      # Bitcoin HTLC API spec
 ├── Makefile                    # Build commands
 ├── .gitignore                  # Git ignore rules
 │
@@ -23,26 +25,38 @@ thunder-portal/
 │   └── reference/
 │       └── (external references)
 │
-├── bitcoin-htlc/               # Rust backend service (to be created)
-│   ├── Cargo.toml
-│   ├── src/
-│   │   ├── main.rs
-│   │   ├── api/              # API endpoints
-│   │   ├── bitcoin/          # Bitcoin integration
-│   │   ├── ethereum/         # Ethereum integration
-│   │   ├── models/           # Data models
-│   │   └── db/              # Database layer
-│   └── tests/
+├── src/                        # TypeScript/Node.js source code
+│   ├── bitcoin-api/           # Bitcoin HTLC service
+│   ├── resolver/              # 1inch Fusion+ resolver
+│   └── shared/                # Shared utilities and types
 │
-└── scripts/                    # Utility scripts (to be created)
-    ├── setup.sh               # Development setup
-    └── demo.sh                # Demo helper scripts
+├── tests/                      # Test suites
+│   ├── unit/                  # Unit tests
+│   └── integration/           # Integration tests
+│
+├── config/                     # Configuration files
+│
+├── scripts/                    # Utility scripts
+│   ├── setup.sh               # Development setup
+│   └── demo.sh                # Demo helper scripts
+│
+└── bitcoin-htlc/               # Alternative: Rust backend service
+    ├── Cargo.toml
+    ├── src/
+    │   ├── main.rs
+    │   ├── api/              # API endpoints
+    │   ├── bitcoin/          # Bitcoin integration
+    │   ├── ethereum/         # Ethereum integration
+    │   ├── models/           # Data models
+    │   └── db/              # Database layer
+    └── tests/
 ```
 
 ## Key Files
 
-### API Specification
-- `openapi-spec.yaml` - Complete API specification with all endpoints
+### API Specifications
+- `api/cross-chain-swap-api.yaml` - Main Cross-Chain Swap API specification
+- `api/bitcoin-htlc-api.yaml` - Bitcoin HTLC service API specification
 
 ### Documentation
 - `docs/api/backend-implementation-checklist.md` - Step-by-step implementation guide
@@ -54,7 +68,7 @@ thunder-portal/
 
 ## Development Workflow
 
-1. **API First** - OpenAPI spec is the source of truth
+1. **API First** - OpenAPI specs in api/ directory are the source of truth
 2. **Documentation** - All docs in organized folders
 3. **Implementation** - Rust service in bitcoin-htlc/
 4. **Testing** - Comprehensive test coverage

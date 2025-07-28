@@ -45,7 +45,9 @@ thunder-portal/
 │   ├── Cargo.toml
 │   └── config/
 │       └── default.toml         # Configuration
-└── openapi-spec.yaml            # API specification
+└── api/
+    ├── cross-chain-swap-api.yaml  # Main API specification
+    └── bitcoin-htlc-api.yaml      # Bitcoin HTLC API
 ```
 
 ## Core Implementation
