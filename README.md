@@ -50,11 +50,11 @@ Thunder Portal brings **native Bitcoin** to 1inch Fusion+ using atomic swaps. No
 - **No Custody Risk**: Funds locked in contracts, not wallets
 - **Native 1inch UX**: Works directly in Fusion+ interface
 
-## 💡 Technical Innovation
+## 💡 Innovation
 
-**The Challenge**: Bitcoin has no smart contracts. Ethereum has no native BTC. How do you atomically swap between them?
+**Thunder Portal is the atomic swap resolver for 1inch Fusion+** - enabling trustless Bitcoin integration with zero custody risk.
 
-**Our Solution**: 
+**How we solved it:**
 1. **Unified Hash Coordination** - Same cryptographic secret controls both chains
 2. **Intent-to-HTLC Bridge** - Fusion+ intents trigger Bitcoin HTLCs automatically  
 3. **Timeout Hierarchy** - Bitcoin timeout > Ethereum timeout prevents attacks
@@ -63,37 +63,36 @@ Thunder Portal brings **native Bitcoin** to 1inch Fusion+ using atomic swaps. No
 ## 🚀 Quick Start
 
 ```bash
-# Clone and install
+# Clone repository
 git clone https://github.com/thunder-portal/thunder-portal.git
-cd thunder-portal && npm install
+cd thunder-portal
 
 # Configure
 cp .env.example .env
 # Add your Bitcoin node and Ethereum RPC
 
-# Run
-npm run start:api      # Bitcoin HTLC service
-npm run start:resolver # Fusion+ resolver
+# Build and run
+make build         # Build all services
+make run-api       # Run Bitcoin HTLC API (Rust)
+make run-resolver  # Run Fusion+ resolver
 ```
 
-## 📊 Why We Win
+## 📊 Comparison
 
-| Solution | Thunder Portal | WBTC | Traditional Bridges |
+| | Thunder Portal | WBTC | Traditional Bridges |
 |----------|---------------|------|--------------------|
-| **Trust Model** | Trustless (Math) | BitGo Custody | Bridge Operators |
-| **Asset Type** | Native BTC | Wrapped IOU | Wrapped IOU |
-| **Hack Risk** | Impossible* | Custody Risk | Bridge Hacks |
-| **1inch Native** | ✅ Yes | ❌ No | ❌ No |
-
-*HTLCs are cryptographically secure - no honeypot to hack
+| **Trust** | Trustless | BitGo Custody | Bridge Operators |
+| **Asset** | Native BTC | Wrapped Token | Wrapped Token |
+| **Security** | Atomic Swaps | Custody Risk | Bridge Hacks |
+| **1inch Support** | ✅ Native | ❌ No | ❌ No |
 
 
 
 ## 👥 Team
 
-- **[Nuttakit DW](https://github.com/NuttakitDW)** - Blockchain Engineer | Rust, Solidity, ZK
-- **[Kongphop Kingpeth](https://github.com/JFKongphop)** - Full-Stack Developer | DeFi, Smart Contracts
-- **[Yuttakhan B.](https://github.com/badgooooor)** - Developer | [yuttakhanb.dev](https://yuttakhanb.dev)
+- **[Nuttakit DW](https://github.com/NuttakitDW)** - Blockchain Enthusiast | Rust, Solidity, Circom, Noir-Lang, Risc0
+- **[Kongphop Kingpeth](https://github.com/JFKongphop)** - Financial Engineering student with expertise in Blockchain and Full-Stack development
+- **[Yuttakhan B.](https://github.com/badgooooor)** - 📸 No talking just straight to the action | [yuttakhanb.dev](https://yuttakhanb.dev)
 
 ---
 
