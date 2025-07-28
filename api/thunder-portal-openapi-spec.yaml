@@ -1,0 +1,728 @@
+openapi: 3.0.3
+info:
+  title: Thunder Portal Bitcoin HTLC API
+  description: |
+    Bitcoin HTLC service for atomic swaps with 1inch Fusion+ protocol.
+    Enables trustless cross-chain swaps between Ethereum and Bitcoin networks.
+  version: 1.0.0
+  contact:
+    name: Thunder Portal Team
+    email: support@thunderportal.io
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: https://api.thunderportal.io/v1
+    description: Production server
+  - url: https://testnet-api.thunderportal.io/v1
+    description: Testnet server
+  - url: http://localhost:3000/v1
+    description: Local development
+
+security:
+  - ApiKeyAuth: []
+
+tags:
+  - name: Quotes
+    description: Quote generation for swaps
+  - name: Swaps
+    description: Swap lifecycle management
+  - name: HTLCs
+    description: HTLC operations
+  - name: Monitoring
+    description: System monitoring and health
+  - name: Webhooks
+    description: Webhook management
+
+paths:
+  /quotes:
+    post:
+      tags:
+        - Quotes
+      summary: Generate swap quote
+      description: Get a quote for a Bitcoin swap with current rates and fees
+      operationId: createQuote
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QuoteRequest'
+      responses:
+        '200':
+          description: Quote generated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuoteResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+
+  /swaps:
+    post:
+      tags:
+        - Swaps
+      summary: Create new swap
+      description: Initiate a new atomic swap with Bitcoin HTLC
+      operationId: createSwap
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSwapRequest'
+      responses:
+        '201':
+          description: Swap created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SwapResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+
+  /swaps/{swapId}:
+    get:
+      tags:
+        - Swaps
+      summary: Get swap details
+      description: Retrieve current status and details of a swap
+      operationId: getSwap
+      parameters:
+        - $ref: '#/components/parameters/SwapId'
+      responses:
+        '200':
+          description: Swap details retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SwapResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /swaps/{swapId}/claim:
+    post:
+      tags:
+        - HTLCs
+      summary: Claim HTLC
+      description: Claim Bitcoin HTLC with preimage
+      operationId: claimSwap
+      parameters:
+        - $ref: '#/components/parameters/SwapId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClaimRequest'
+      responses:
+        '200':
+          description: Claim transaction broadcast
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClaimResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /swaps/{swapId}/refund:
+    post:
+      tags:
+        - HTLCs
+      summary: Refund HTLC
+      description: Refund Bitcoin HTLC after timeout
+      operationId: refundSwap
+      parameters:
+        - $ref: '#/components/parameters/SwapId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefundRequest'
+      responses:
+        '200':
+          description: Refund transaction broadcast
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RefundResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '425':
+          description: Too early - timeout not reached
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /swaps/{swapId}/transactions:
+    get:
+      tags:
+        - Swaps
+      summary: Get swap transactions
+      description: List all Bitcoin transactions related to a swap
+      operationId: getSwapTransactions
+      parameters:
+        - $ref: '#/components/parameters/SwapId'
+      responses:
+        '200':
+          description: Transaction list retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionList'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /webhooks:
+    post:
+      tags:
+        - Webhooks
+      summary: Register webhook
+      description: Register a webhook endpoint for swap events
+      operationId: createWebhook
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookRequest'
+      responses:
+        '201':
+          description: Webhook registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+    get:
+      tags:
+        - Webhooks
+      summary: List webhooks
+      description: Get all registered webhooks
+      operationId: listWebhooks
+      responses:
+        '200':
+          description: Webhook list retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  webhooks:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/WebhookResponse'
+
+  /webhooks/{webhookId}:
+    delete:
+      tags:
+        - Webhooks
+      summary: Delete webhook
+      description: Remove a registered webhook
+      operationId: deleteWebhook
+      parameters:
+        - name: webhookId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Webhook deleted
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /monitoring/health:
+    get:
+      tags:
+        - Monitoring
+      summary: Health check
+      description: System health and status check
+      operationId: healthCheck
+      security: []
+      responses:
+        '200':
+          description: System healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthStatus'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+
+  /monitoring/fees:
+    get:
+      tags:
+        - Monitoring
+      summary: Get fee estimates
+      description: Current Bitcoin network fee estimates
+      operationId: getFeeEstimates
+      security: []
+      responses:
+        '200':
+          description: Fee estimates retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FeeEstimates'
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+
+  parameters:
+    SwapId:
+      name: swapId
+      in: path
+      required: true
+      description: Unique swap identifier
+      schema:
+        type: string
+        pattern: '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+
+  schemas:
+    QuoteRequest:
+      type: object
+      required:
+        - type
+        - amount
+        - fromAsset
+        - toAsset
+      properties:
+        type:
+          type: string
+          enum: [submarine, reverse, chain]
+          description: |
+            - submarine: ETH/ERC20 -> BTC
+            - reverse: BTC -> ETH/ERC20
+            - chain: BTC -> BTC (different addresses)
+        amount:
+          type: string
+          description: Amount in satoshis (for BTC) or wei (for ETH)
+          example: "100000"
+        fromAsset:
+          type: string
+          enum: [BTC, ETH, USDC, USDT, DAI]
+        toAsset:
+          type: string
+          enum: [BTC, ETH, USDC, USDT, DAI]
+        userAddress:
+          type: string
+          description: User's destination address
+        fusionOrderId:
+          type: string
+          description: Associated Fusion+ order ID
+
+    QuoteResponse:
+      type: object
+      properties:
+        quoteId:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [submarine, reverse, chain]
+        amount:
+          type: string
+          description: Expected output amount
+        fee:
+          type: string
+          description: Total fee in satoshis
+        exchangeRate:
+          type: number
+          description: Exchange rate applied
+        minerFee:
+          type: string
+          description: Estimated miner fee
+        serviceFee:
+          type: string
+          description: Service fee amount
+        timeoutBlocks:
+          type: integer
+          description: Timeout in blocks
+        expiresAt:
+          type: string
+          format: date-time
+        minAmount:
+          type: string
+        maxAmount:
+          type: string
+
+    CreateSwapRequest:
+      type: object
+      required:
+        - type
+        - paymentHash
+        - amount
+        - userPublicKey
+        - timeoutBlocks
+      properties:
+        type:
+          type: string
+          enum: [submarine, reverse, chain]
+        quoteId:
+          type: string
+          format: uuid
+          description: Optional quote to use
+        paymentHash:
+          type: string
+          pattern: '^[0-9a-f]{64}$'
+          description: SHA256 hash of preimage (hex)
+        amount:
+          type: string
+          description: Amount in satoshis
+        userPublicKey:
+          type: string
+          description: User's Bitcoin public key (hex)
+        userAddress:
+          type: string
+          description: User's destination address
+        timeoutBlocks:
+          type: integer
+          minimum: 10
+          maximum: 2016
+          default: 144
+        fusionOrderId:
+          type: string
+          description: Associated Fusion+ order ID
+        metadata:
+          type: object
+          description: Additional metadata
+          additionalProperties: true
+
+    SwapResponse:
+      type: object
+      properties:
+        swapId:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [submarine, reverse, chain]
+        status:
+          type: string
+          enum: [created, waiting_payment, funded, claimed, refunded, expired]
+        htlc:
+          $ref: '#/components/schemas/HTLCDetails'
+        amount:
+          type: string
+          description: Swap amount in satoshis
+        fee:
+          type: string
+          description: Total fee
+        paymentHash:
+          type: string
+        timeoutBlockHeight:
+          type: integer
+        currentBlockHeight:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        transactions:
+          type: array
+          items:
+            $ref: '#/components/schemas/Transaction'
+
+    HTLCDetails:
+      type: object
+      properties:
+        address:
+          type: string
+          description: P2SH or P2WSH address
+        script:
+          type: string
+          description: HTLC script hex
+        redeemScript:
+          type: string
+          description: Redeem script hex
+        bip21:
+          type: string
+          description: BIP21 payment URI
+          example: "bitcoin:3Abc...?amount=0.001&label=ThunderSwap"
+        publicKeys:
+          type: object
+          properties:
+            user:
+              type: string
+            resolver:
+              type: string
+
+    ClaimRequest:
+      type: object
+      required:
+        - preimage
+      properties:
+        preimage:
+          type: string
+          pattern: '^[0-9a-f]{64}$'
+          description: Preimage revealing the hash (hex)
+        signature:
+          type: string
+          description: User's signature if required
+        destinationAddress:
+          type: string
+          description: Override destination address
+
+    ClaimResponse:
+      type: object
+      properties:
+        txId:
+          type: string
+        rawTx:
+          type: string
+          description: Raw transaction hex
+        status:
+          type: string
+          enum: [broadcast, confirmed]
+        amount:
+          type: string
+          description: Amount after fees
+
+    RefundRequest:
+      type: object
+      properties:
+        signature:
+          type: string
+          description: Resolver's signature
+        destinationAddress:
+          type: string
+          description: Refund destination
+
+    RefundResponse:
+      type: object
+      properties:
+        txId:
+          type: string
+        rawTx:
+          type: string
+        status:
+          type: string
+          enum: [broadcast, confirmed]
+        amount:
+          type: string
+
+    Transaction:
+      type: object
+      properties:
+        txId:
+          type: string
+        type:
+          type: string
+          enum: [funding, claim, refund]
+        status:
+          type: string
+          enum: [mempool, confirmed]
+        confirmations:
+          type: integer
+        amount:
+          type: string
+        fee:
+          type: string
+        blockHeight:
+          type: integer
+        timestamp:
+          type: string
+          format: date-time
+
+    TransactionList:
+      type: object
+      properties:
+        transactions:
+          type: array
+          items:
+            $ref: '#/components/schemas/Transaction'
+
+    WebhookRequest:
+      type: object
+      required:
+        - url
+        - events
+      properties:
+        url:
+          type: string
+          format: uri
+        events:
+          type: array
+          items:
+            type: string
+            enum: 
+              - swap.created
+              - swap.funded
+              - swap.claimed
+              - swap.refunded
+              - swap.expired
+              - transaction.confirmed
+              - timeout.warning
+        secret:
+          type: string
+          description: Shared secret for HMAC signatures
+          minLength: 32
+
+    WebhookResponse:
+      type: object
+      properties:
+        webhookId:
+          type: string
+          format: uuid
+        url:
+          type: string
+        events:
+          type: array
+          items:
+            type: string
+        active:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [healthy, degraded, unhealthy]
+        version:
+          type: string
+        uptime:
+          type: integer
+          description: Uptime in seconds
+        bitcoin:
+          type: object
+          properties:
+            connected:
+              type: boolean
+            blockHeight:
+              type: integer
+            network:
+              type: string
+              enum: [mainnet, testnet, signet, regtest]
+        database:
+          type: object
+          properties:
+            connected:
+              type: boolean
+            pendingSwaps:
+              type: integer
+
+    FeeEstimates:
+      type: object
+      properties:
+        fastestFee:
+          type: integer
+          description: Fee rate for next block (sat/vB)
+        halfHourFee:
+          type: integer
+          description: Fee rate for ~30 min (sat/vB)
+        hourFee:
+          type: integer
+          description: Fee rate for ~1 hour (sat/vB)
+        economyFee:
+          type: integer
+          description: Economy fee rate (sat/vB)
+        minimumFee:
+          type: integer
+          description: Minimum relay fee (sat/vB)
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              enum:
+                - INVALID_REQUEST
+                - INVALID_PREIMAGE
+                - TIMEOUT_NOT_REACHED
+                - ALREADY_CLAIMED
+                - ALREADY_REFUNDED
+                - INSUFFICIENT_BALANCE
+                - SWAP_NOT_FOUND
+                - SWAP_EXPIRED
+                - INVALID_SIGNATURE
+                - NETWORK_ERROR
+                - INTERNAL_ERROR
+            message:
+              type: string
+            details:
+              type: object
+              additionalProperties: true
+
+  responses:
+    BadRequest:
+      description: Invalid request parameters
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    
+    Conflict:
+      description: Resource conflict
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    
+    ServiceUnavailable:
+      description: Service temporarily unavailable
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+webhooks:
+  swapEvents:
+    post:
+      requestBody:
+        description: Swap event notification
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                event:
+                  type: string
+                timestamp:
+                  type: string
+                  format: date-time
+                swapId:
+                  type: string
+                data:
+                  type: object
+                  additionalProperties: true
+      responses:
+        '200':
+          description: Webhook processed successfully
