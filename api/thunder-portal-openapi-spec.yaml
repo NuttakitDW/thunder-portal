@@ -193,7 +193,13 @@ paths:
       tags:
         - Webhooks
       summary: Register webhook
-      description: Register a webhook endpoint for swap events
+      description: |
+        Register a webhook endpoint for swap events. 
+        
+        When events occur, Thunder Portal will send a POST request to your URL with:
+        - Event payload in the body (see WebhookEvent schema)
+        - `X-Webhook-Signature` header with HMAC-SHA256 signature
+        - `X-Webhook-Event` header with event type
       operationId: createWebhook
       requestBody:
         required: true
@@ -599,6 +605,24 @@ components:
           type: string
           format: date-time
 
+    WebhookEvent:
+      type: object
+      description: Webhook event payload sent to registered endpoints
+      properties:
+        event:
+          type: string
+          description: Event type (e.g., swap.funded, swap.claimed)
+        timestamp:
+          type: string
+          format: date-time
+        swapId:
+          type: string
+          format: uuid
+        data:
+          type: object
+          description: Event-specific data
+          additionalProperties: true
+
     HealthStatus:
       type: object
       properties:
@@ -701,27 +725,3 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/Error'
-
-webhooks:
-  swapEvents:
-    post:
-      requestBody:
-        description: Swap event notification
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                event:
-                  type: string
-                timestamp:
-                  type: string
-                  format: date-time
-                swapId:
-                  type: string
-                data:
-                  type: object
-                  additionalProperties: true
-      responses:
-        '200':
-          description: Webhook processed successfully
