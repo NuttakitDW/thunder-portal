@@ -1,151 +1,102 @@
-# 1inch Unite Hackathon - Bitcoin Prize Track Official Requirements
+<div align="center">
+  <img src="assets/logos/logo-banner-dark.png" alt="Thunder Portal" width="100%" />
+</div>
 
-## Prize: Extend Fusion+ to Bitcoin (Doge/LTC/etc.) — $32,000
+<h1 align="center">⚡ Thunder Portal</h1>
 
-### Prize Distribution
-- 🥇 1st place: $12,000
-- 🥈 2nd place: $7,500
-- 🥉 3rd place: $5,000
-- 🏅 4th place: $4,000
-- 🏅 5th place: $3,500
+<p align="center">
+  <strong>Native Bitcoin support for 1inch Fusion+ cross-chain swaps</strong>
+</p>
 
-## Official Challenge Description
+<p align="center">
+  Thunder Portal extends 1inch Fusion+ to enable trustless, bidirectional swaps between Ethereum and Bitcoin networks using atomic swap technology.
+</p>
 
-Build a novel extension for 1inch Cross-chain Swap (Fusion+) that enables swaps between Ethereum and one of the following chains:
-- Bitcoin
-- Dogecoin
-- Litecoin
-- Bitcoin Cash
+## 🚀 The Problem
 
-## Qualification Requirements
+Bitcoin's $800B market cap is locked out of DeFi. Current solutions require:
+- **Wrapped tokens** (WBTC) = Centralized custody risk
+- **Traditional bridges** = Slow, expensive, hackable
+- **CEXs** = Not your keys, not your coins
 
-### Requirements:
-1. **Preserve hashlock and timelock functionality for the non-EVM implementation**
-2. **Swap functionality should be bidirectional (swaps should be possible to and from Ethereum)**
-3. **Onchain (mainnet or testnet) execution of token transfers should be presented during the final demo**
+## ⚡ The Solution
 
-### Stretch goals (not hard requirements):
-- UI
-- Enable partial fills
-- Relayer and resolver
+Thunder Portal brings **native Bitcoin** to 1inch Fusion+ using atomic swaps. No wrapping, no bridges, no custody.
 
-## What This REALLY Means
+**How?** We built a custom resolver that coordinates HTLCs between Bitcoin and Ethereum, enabling trustless BTC ↔ ETH swaps directly through the 1inch interface.
 
-### 1. Preserve hashlock and timelock functionality
-**What judges want to see:**
-- Atomic swap implementation using HTLCs
-- Same hash locks both chains
-- Timeout protection if swap fails
-- No custody risk - trustless execution
+## 🏗️ How It Works
 
-**Implementation approach:**
-- Bitcoin P2SH scripts with HTLC logic
-- Ethereum smart contract with matching hash
-- Proper timeout hierarchy (Bitcoin > Ethereum)
+### Simple Atomic Swap Flow
 
-### 2. Bidirectional swaps
-**What judges want to see:**
-- ETH/ERC20 → BTC working flow
-- BTC → ETH/ERC20 working flow
-- Both directions fully functional
-- Clear demonstration of both
+```
+1. User creates 1inch Fusion+ order: "Swap my ETH for BTC"
+   ↓
+2. Thunder Portal resolver locks BTC in Bitcoin HTLC
+   ↓  
+3. Resolver fills Fusion+ order (ETH locked with same secret)
+   ↓
+4. User claims BTC by revealing secret
+   ↓
+5. Resolver uses secret to claim ETH
+```
 
-**Implementation approach:**
-- Order system supporting both directions
-- Status tracking for each flow
-- Proper state management
+**The Magic**: Both sides use the same secret hash. If one side fails, both timeout and refund. True atomic execution.
 
-### 3. Onchain execution demo
-**What judges want to see:**
-- Live transactions on testnet/mainnet
-- Bitcoin transaction visible on explorer
-- Ethereum transaction visible on explorer
-- Real atomic swap execution
+### Why This Matters
 
-**Demo requirements:**
-- Transaction IDs/links ready
-- Block explorers open
-- Clear flow explanation
-- Handle potential delays gracefully
+- **No Wrapped Tokens**: Trade real BTC, not IOUs
+- **No Bridge Hacks**: HTLCs are mathematically secure
+- **No Custody Risk**: Funds locked in contracts, not wallets
+- **Native 1inch UX**: Works directly in Fusion+ interface
 
-## Focus Areas for Winning
+## 💡 Innovation
 
-### Technical Excellence
-1. **Correct atomic swap implementation**
-   - No trust assumptions
-   - Mathematically guaranteed atomicity
-   - Proper timeout handling
+**Thunder Portal is the atomic swap resolver for 1inch Fusion+** - enabling trustless Bitcoin integration with zero custody risk.
 
-2. **1inch Fusion+ Integration**
-   - Native integration with Fusion+ protocol
-   - Resolver acts as cross-chain bridge
-   - Maintains Fusion+ order semantics
+**How we solved it:**
+1. **Unified Hash Coordination** - Same cryptographic secret controls both chains
+2. **Intent-to-HTLC Bridge** - Fusion+ intents trigger Bitcoin HTLCs automatically  
+3. **Timeout Hierarchy** - Bitcoin timeout > Ethereum timeout prevents attacks
+4. **Resolver Network** - Professional market makers provide liquidity
 
-3. **Security First**
-   - No custody of user funds
-   - Clear failure recovery paths
-   - Timeout hierarchy prevents griefing
+## 🚀 Quick Start
 
-### What NOT to Focus On
+```bash
+# Clone repository
+git clone https://github.com/thunder-portal/thunder-portal.git
+cd thunder-portal
 
-1. **UI is NOT required** - It's a stretch goal
-2. **Partial fills are NOT required** - Nice to have
-3. **Complex relayer infrastructure** - Keep it simple
+# Configure
+cp .env.example .env
+# Add your Bitcoin node and Ethereum RPC
 
-## Winning Strategy
+# Build and run
+make build         # Build all services
+make run-api       # Run Bitcoin HTLC API (Rust)
+make run-resolver  # Run Fusion+ resolver
+```
 
-### Core Implementation (100% Focus)
-1. **Bidirectional atomic swaps that work**
-2. **Clean integration with Fusion+**
-3. **Reliable demo execution**
-4. **Clear technical documentation**
+## 📊 Comparison
 
-### If Time Permits (Stretch Goals)
-1. Basic UI for easier demo
-2. Multiple resolver support
-3. Partial fill capability
+| | Thunder Portal | WBTC | Traditional Bridges |
+|----------|---------------|------|--------------------|
+| **Trust** | Trustless | BitGo Custody | Bridge Operators |
+| **Asset** | Native BTC | Wrapped Token | Wrapped Token |
+| **Security** | Atomic Swaps | Custody Risk | Bridge Hacks |
+| **1inch Support** | ✅ Native | ❌ No | ❌ No |
 
-## Demo Script Essentials
 
-### Part 1: ETH → BTC
-1. Show Fusion+ order creation
-2. Show Bitcoin HTLC creation
-3. Execute swap
-4. Show both transactions complete
 
-### Part 2: BTC → ETH
-1. Show Bitcoin HTLC creation
-2. Show Fusion+ order filling
-3. Execute swap
-4. Show both transactions complete
+## 👥 Team
 
-### Part 3: Technical Deep Dive
-1. Explain hashlock/timelock preservation
-2. Show atomic guarantee
-3. Demonstrate failure case handling
+- **[Nuttakit DW](https://github.com/NuttakitDW)** - Blockchain Enthusiast | Rust, Solidity, Circom, Noir-Lang, Risc0
+- **[Kongphop Kingpeth](https://github.com/JFKongphop)** - Financial Engineering student with expertise in Blockchain and Full-Stack development
+- **[Yuttakhan B.](https://github.com/badgooooor)** - 📸 No talking just straight to the action | [yuttakhanb.dev](https://yuttakhanb.dev)
 
-## Judge Evaluation Criteria (Inferred)
+---
 
-1. **Does it work?** - Both directions must function
-2. **Is it secure?** - Atomic swaps properly implemented
-3. **Is it integrated?** - Native Fusion+ extension
-4. **Is it novel?** - Unique approach to the problem
-5. **Demo quality** - Clear, professional presentation
-
-## Common Pitfalls to Avoid
-
-1. **Over-engineering** - Focus on core requirements
-2. **UI before functionality** - It's not required
-3. **Ignoring demo prep** - Practice the demo flow
-4. **Missing bidirectional** - Both directions must work
-5. **Centralized shortcuts** - Must be trustless
-
-## Remember
-
-The judges want to see:
-- **Working atomic swaps** between Ethereum and Bitcoin
-- **Both directions** functioning properly
-- **Live demo** with real transactions
-- **Fusion+ integration** that makes sense
-
-Everything else is secondary. Focus on these four points for success.
+<p align="center">
+  <strong>⚡ Thunder Portal - Bringing Bitcoin to DeFi</strong><br>
+  <em>1inch Unite Hackathon | Bitcoin Track | $32,000 Prize</em>
+</p>
