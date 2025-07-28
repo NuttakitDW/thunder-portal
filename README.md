@@ -104,16 +104,23 @@ For the hackathon demo, we'll showcase:
 3. **Failure Handling**: Timeout and refund mechanisms
 4. **Performance**: Sub-minute cross-chain execution
 
-## 🛣️ Roadmap
+## 🛣️ Development Status
 
-- [x] Research and design architecture
-- [x] Implement atomic swap primitives
-- [ ] Build Fusion+ integration
-- [ ] Create resolver logic
-- [ ] Add safety mechanisms
-- [ ] Deploy to testnet
-- [ ] Prepare demo
-- [ ] Submit to hackathon
+### Completed ✅
+- [x] Architecture design and documentation
+- [x] Bitcoin HTLC API specification
+- [x] Implementation planning
+- [x] Hackathon requirements analysis
+
+### In Progress 🔄
+- [ ] Bitcoin HTLC service implementation
+- [ ] Fusion+ resolver development
+- [ ] Integration testing
+
+### Upcoming ⏳
+- [ ] Testnet deployment
+- [ ] Demo preparation
+- [ ] Final submission
 
 ## 👥 Team
 
