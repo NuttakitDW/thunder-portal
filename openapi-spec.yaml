@@ -1,0 +1,710 @@
+openapi: 3.0.3
+info:
+  title: Thunder Portal - Cross-Chain Swap API
+  description: |
+    Native Bitcoin integration for 1inch Fusion+ enabling trustless ETH ↔ BTC atomic swaps.
+    
+    ## Overview
+    Thunder Portal acts as a cross-chain resolver that coordinates atomic swaps between
+    Ethereum (ETH, USDC, etc.) and Bitcoin using HTLCs on both chains.
+    
+    ## Key Features
+    - Direct integration with 1inch Fusion+ order system
+    - Atomic swap guarantees (both succeed or both fail)
+    - No wrapped tokens - real BTC and ETH
+    - Trustless execution via HTLCs
+  version: 1.0.0
+  contact:
+    name: Thunder Portal Team
+    url: https://github.com/thunder-portal
+
+servers:
+  - url: https://api.thunderportal.io/v1
+    description: Production server
+  - url: https://testnet-api.thunderportal.io/v1
+    description: Testnet server
+
+security:
+  - ApiKeyAuth: []
+
+tags:
+  - name: Orders
+    description: Create and manage cross-chain swap orders
+  - name: HTLCs
+    description: Bitcoin HTLC operations
+  - name: Quotes
+    description: Get swap quotes and exchange rates
+  - name: Status
+    description: Monitor order and transaction status
+
+paths:
+  /quotes:
+    post:
+      tags:
+        - Quotes
+      summary: Get cross-chain swap quote
+      description: |
+        Calculate exchange rate and fees for ETH ↔ BTC swaps.
+        Includes gas costs, Bitcoin network fees, and resolver fees.
+      operationId: createQuote
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QuoteRequest'
+      responses:
+        '200':
+          description: Swap quote with rates and fees
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuoteResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /orders:
+    post:
+      tags:
+        - Orders
+      summary: Create cross-chain swap order
+      description: |
+        Creates a new atomic swap order between Ethereum and Bitcoin.
+        For ETH→BTC: Thunder Portal creates Bitcoin HTLC for user to claim.
+        For BTC→ETH: Thunder Portal prepares to fill Fusion+ order after Bitcoin HTLC is funded.
+      operationId: createOrder
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrderRequest'
+      responses:
+        '201':
+          description: Order created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateOrderResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /orders/{orderId}:
+    get:
+      tags:
+        - Status
+      summary: Get order details
+      description: Retrieve current status and details of a swap order
+      operationId: getOrder
+      parameters:
+        - $ref: '#/components/parameters/OrderId'
+      responses:
+        '200':
+          description: Order details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderDetails'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /orders/{orderId}/fusion-proof:
+    post:
+      tags:
+        - Orders
+      summary: Submit Fusion+ order proof
+      description: |
+        For BTC→ETH swaps: Submit proof of Fusion+ order creation
+        so Thunder Portal knows which order to fill after Bitcoin HTLC is funded.
+      operationId: submitFusionProof
+      parameters:
+        - $ref: '#/components/parameters/OrderId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FusionProofRequest'
+      responses:
+        '200':
+          description: Fusion proof accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FusionProofResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /htlc/{htlcId}/claim:
+    post:
+      tags:
+        - HTLCs
+      summary: Claim Bitcoin HTLC
+      description: |
+        Claim Bitcoin from HTLC by revealing the preimage.
+        Used by users in ETH→BTC swaps after resolver reveals secret on Ethereum.
+      operationId: claimHtlc
+      parameters:
+        - $ref: '#/components/parameters/HtlcId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClaimRequest'
+      responses:
+        '200':
+          description: HTLC claimed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClaimResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /transactions/{txId}/status:
+    get:
+      tags:
+        - Status
+      summary: Get Bitcoin transaction status
+      description: Check confirmations and status of a Bitcoin transaction
+      operationId: getTransactionStatus
+      parameters:
+        - name: txId
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: '^[a-fA-F0-9]{64}$'
+      responses:
+        '200':
+          description: Transaction status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionStatus'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /webhooks:
+    post:
+      tags:
+        - Status
+      summary: Register webhook
+      description: Register webhook URL for order status updates
+      operationId: registerWebhook
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookRegistration'
+      responses:
+        '201':
+          description: Webhook registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+
+  parameters:
+    OrderId:
+      name: orderId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+        
+    HtlcId:
+      name: htlcId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+  schemas:
+    SwapDirection:
+      type: string
+      enum: [ETH_TO_BTC, BTC_TO_ETH]
+      description: |
+        - ETH_TO_BTC: Swap ETH/ERC20 to Bitcoin
+        - BTC_TO_ETH: Swap Bitcoin to ETH/ERC20
+
+    TokenInfo:
+      type: object
+      required:
+        - symbol
+        - address
+      properties:
+        symbol:
+          type: string
+          description: Token symbol (ETH, USDC, USDT, etc.)
+          example: USDC
+        address:
+          type: string
+          description: Token contract address (0x0 for ETH)
+          pattern: '^0x[a-fA-F0-9]{40}$'
+          example: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
+
+    QuoteRequest:
+      type: object
+      required:
+        - direction
+        - amount
+      properties:
+        direction:
+          $ref: '#/components/schemas/SwapDirection'
+        amount:
+          type: string
+          description: Amount in smallest unit (wei or satoshis)
+          example: "1000000000000000000"
+        fromToken:
+          $ref: '#/components/schemas/TokenInfo'
+          description: Required for ETH_TO_BTC swaps
+        toToken:
+          $ref: '#/components/schemas/TokenInfo'
+          description: Required for BTC_TO_ETH swaps
+
+    QuoteResponse:
+      type: object
+      required:
+        - quoteId
+        - direction
+        - fromAmount
+        - toAmount
+        - exchangeRate
+        - fees
+        - expiresAt
+      properties:
+        quoteId:
+          type: string
+          format: uuid
+        direction:
+          $ref: '#/components/schemas/SwapDirection'
+        fromAmount:
+          type: string
+          description: Amount to send (wei or satoshis)
+        toAmount:
+          type: string
+          description: Amount to receive (satoshis or wei)
+        exchangeRate:
+          type: number
+          description: Exchange rate (e.g., 0.0625 BTC per ETH)
+          example: 0.0625
+        fees:
+          type: object
+          properties:
+            bitcoinNetworkFee:
+              type: string
+              description: Bitcoin network fee in satoshis
+            ethereumGasFee:
+              type: string
+              description: Estimated gas fee in wei
+            resolverFee:
+              type: string
+              description: Resolver fee in output currency
+        expiresAt:
+          type: string
+          format: date-time
+
+    CreateOrderRequest:
+      type: object
+      required:
+        - direction
+        - amount
+        - preimageHash
+      properties:
+        direction:
+          $ref: '#/components/schemas/SwapDirection'
+        amount:
+          type: string
+          description: Amount in smallest unit
+        quoteId:
+          type: string
+          format: uuid
+          description: Optional quote ID to lock in rates
+        
+        # For ETH_TO_BTC swaps
+        fromToken:
+          $ref: '#/components/schemas/TokenInfo'
+        bitcoinAddress:
+          type: string
+          description: User's Bitcoin address to receive BTC
+          example: "bc1q..."
+        bitcoinPublicKey:
+          type: string
+          description: User's Bitcoin public key for HTLC (hex)
+          pattern: '^[a-fA-F0-9]{66}$'
+        
+        # For BTC_TO_ETH swaps
+        toToken:
+          $ref: '#/components/schemas/TokenInfo'
+        ethereumAddress:
+          type: string
+          description: User's Ethereum address to receive tokens
+          pattern: '^0x[a-fA-F0-9]{40}$'
+        
+        # HTLC parameters
+        preimageHash:
+          type: string
+          description: SHA256 hash of secret preimage (hex)
+          pattern: '^[a-fA-F0-9]{64}$'
+        
+        # Fusion+ integration
+        fusionOrderData:
+          type: object
+          description: Data needed to create/fill Fusion+ order
+          properties:
+            salt:
+              type: string
+              description: Order salt for uniqueness
+            deadline:
+              type: string
+              description: Order deadline timestamp
+
+    CreateOrderResponse:
+      type: object
+      required:
+        - orderId
+        - direction
+        - status
+        - expiresAt
+      properties:
+        orderId:
+          type: string
+          format: uuid
+        direction:
+          $ref: '#/components/schemas/SwapDirection'
+        status:
+          $ref: '#/components/schemas/OrderStatus'
+        
+        # For ETH_TO_BTC: Bitcoin HTLC details
+        bitcoinHtlc:
+          type: object
+          properties:
+            htlcId:
+              type: string
+              format: uuid
+            address:
+              type: string
+              description: P2SH address (funds held here)
+            redeemScript:
+              type: string
+              description: HTLC redeem script (hex)
+            timeoutHeight:
+              type: integer
+              description: Bitcoin block height for timeout
+            amount:
+              type: string
+              description: Amount locked in satoshis
+        
+        # For BTC_TO_ETH: Instructions for user
+        bitcoinDeposit:
+          type: object
+          properties:
+            address:
+              type: string
+              description: Bitcoin address to send funds
+            amount:
+              type: string
+              description: Exact amount to send in satoshis
+            timeoutHeight:
+              type: integer
+        
+        expiresAt:
+          type: string
+          format: date-time
+
+    FusionProofRequest:
+      type: object
+      required:
+        - fusionOrderId
+        - fusionOrderHash
+        - fusionOrderSignature
+      properties:
+        fusionOrderId:
+          type: string
+          description: 1inch Fusion+ order ID
+        fusionOrderHash:
+          type: string
+          description: EIP-712 order hash
+          pattern: '^0x[a-fA-F0-9]{64}$'
+        fusionOrderSignature:
+          type: string
+          description: User's signature of Fusion+ order
+          pattern: '^0x[a-fA-F0-9]{130}$'
+        resolverAddress:
+          type: string
+          description: Thunder Portal resolver address on Ethereum
+          pattern: '^0x[a-fA-F0-9]{40}$'
+
+    FusionProofResponse:
+      type: object
+      required:
+        - accepted
+        - bitcoinDepositAddress
+      properties:
+        accepted:
+          type: boolean
+        bitcoinDepositAddress:
+          type: string
+          description: Confirmed Bitcoin address for deposit
+
+    OrderDetails:
+      type: object
+      required:
+        - orderId
+        - direction
+        - status
+        - fromAmount
+        - toAmount
+        - createdAt
+        - updatedAt
+      properties:
+        orderId:
+          type: string
+          format: uuid
+        direction:
+          $ref: '#/components/schemas/SwapDirection'
+        status:
+          $ref: '#/components/schemas/OrderStatus'
+        fromAmount:
+          type: string
+        toAmount:
+          type: string
+        fromToken:
+          $ref: '#/components/schemas/TokenInfo'
+        toToken:
+          $ref: '#/components/schemas/TokenInfo'
+        
+        # Status details
+        bitcoinTransactions:
+          type: array
+          items:
+            $ref: '#/components/schemas/BitcoinTransaction'
+        ethereumTransactions:
+          type: array
+          items:
+            $ref: '#/components/schemas/EthereumTransaction'
+        fusionOrder:
+          type: object
+          properties:
+            orderId:
+              type: string
+            orderHash:
+              type: string
+            status:
+              type: string
+              enum: [pending, fillable, filling, filled, cancelled]
+        
+        error:
+          type: string
+          description: Error message if swap failed
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    OrderStatus:
+      type: string
+      enum:
+        - created
+        - waiting_for_bitcoin_deposit
+        - waiting_for_fusion_order
+        - bitcoin_htlc_funded
+        - fusion_order_filling
+        - fusion_order_filled
+        - completed
+        - expired
+        - failed
+      description: |
+        Order status progression:
+        - created: Order created, waiting for next step
+        - waiting_for_bitcoin_deposit: Waiting for user's Bitcoin deposit
+        - waiting_for_fusion_order: Waiting for Fusion+ order proof
+        - bitcoin_htlc_funded: Bitcoin HTLC is funded and confirmed
+        - fusion_order_filling: Resolver is filling Fusion+ order
+        - fusion_order_filled: Fusion+ order filled, waiting for claim
+        - completed: Swap completed successfully
+        - expired: Order expired without completion
+        - failed: Swap failed
+
+    BitcoinTransaction:
+      type: object
+      properties:
+        txId:
+          type: string
+          pattern: '^[a-fA-F0-9]{64}$'
+        type:
+          type: string
+          enum: [funding, claim, refund]
+        amount:
+          type: string
+          description: Amount in satoshis
+        confirmations:
+          type: integer
+        status:
+          type: string
+          enum: [pending, confirmed, failed]
+
+    EthereumTransaction:
+      type: object
+      properties:
+        txHash:
+          type: string
+          pattern: '^0x[a-fA-F0-9]{64}$'
+        type:
+          type: string
+          enum: [approve, fill_order, claim, refund]
+        amount:
+          type: string
+          description: Amount in wei
+        gasUsed:
+          type: string
+        status:
+          type: string
+          enum: [pending, confirmed, failed]
+
+    ClaimRequest:
+      type: object
+      required:
+        - preimage
+      properties:
+        preimage:
+          type: string
+          description: Secret preimage to claim HTLC (hex)
+          pattern: '^[a-fA-F0-9]{64}$'
+        claimAddress:
+          type: string
+          description: Optional Bitcoin address for receiving funds
+          example: "bc1q..."
+
+    ClaimResponse:
+      type: object
+      required:
+        - txId
+        - claimAddress
+        - amount
+      properties:
+        txId:
+          type: string
+          pattern: '^[a-fA-F0-9]{64}$'
+        claimAddress:
+          type: string
+        amount:
+          type: string
+          description: Amount claimed in satoshis
+
+    TransactionStatus:
+      type: object
+      required:
+        - txId
+        - status
+        - confirmations
+      properties:
+        txId:
+          type: string
+        status:
+          type: string
+          enum: [pending, confirmed, failed]
+        confirmations:
+          type: integer
+        blockHeight:
+          type: integer
+        fee:
+          type: string
+          description: Fee paid in satoshis
+
+    WebhookRegistration:
+      type: object
+      required:
+        - url
+        - events
+      properties:
+        url:
+          type: string
+          format: uri
+        events:
+          type: array
+          items:
+            type: string
+            enum:
+              - order.created
+              - order.bitcoin_deposit_detected
+              - order.bitcoin_deposit_confirmed
+              - order.fusion_order_received
+              - order.fusion_order_filling
+              - order.fusion_order_filled
+              - order.completed
+              - order.failed
+              - order.expired
+        secret:
+          type: string
+          description: Secret for HMAC signature verification
+          minLength: 32
+
+    WebhookResponse:
+      type: object
+      required:
+        - webhookId
+        - url
+        - events
+      properties:
+        webhookId:
+          type: string
+          format: uuid
+        url:
+          type: string
+        events:
+          type: array
+          items:
+            type: string
+        secret:
+          type: string
+
+    Error:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+          example: "INVALID_AMOUNT"
+        message:
+          type: string
+        details:
+          type: object
+
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+            
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
