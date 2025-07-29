@@ -7,7 +7,7 @@ use uuid::Uuid;
 /// Create a new cross-chain swap order
 pub async fn create_order(
     pool: &SqlitePool,
-    resolver_pubkey: &PublicKey,
+    resolver_pubkey: Option<&PublicKey>,
     request: CreateOrderRequest,
 ) -> Result<CreateOrderResponse, ApiError> {
     // Parse amount
@@ -67,7 +67,11 @@ pub async fn create_order(
         SwapDirection::EthToBtc => None, // Amount is in ETH/tokens
         SwapDirection::BtcToEth => Some(amount_value as i64), // Amount is in BTC
     };
-    let resolver_pubkey_str = resolver_pubkey.to_string();
+    
+    // Use resolver pubkey from request or config (if available)
+    let resolver_pubkey_str = request.resolver_public_key.clone()
+        .or_else(|| resolver_pubkey.map(|pk| pk.to_string()))
+        .unwrap_or_else(|| "".to_string());
     let bitcoin_timeout = timeouts.bitcoin_blocks as i64;
     let ethereum_timeout = timeouts.ethereum_blocks as i64;
     let bitcoin_confirmations = confirmations.bitcoin as i64;
@@ -130,7 +134,7 @@ pub async fn create_order(
             let instructions = BtcToEthInstructions {
                 htlc_requirements: HtlcRequirements {
                     user_public_key: request.bitcoin_public_key.clone().unwrap_or_default(),
-                    resolver_public_key: resolver_pubkey.to_string(),
+                    resolver_public_key: resolver_pubkey_str.clone(),
                     payment_hash: request.preimage_hash.clone(),
                     amount: request.amount.clone(),
                     timeout_height: bitcoin_timeout as u32,
@@ -166,9 +170,9 @@ mod tests {
     use super::*;
     use std::str::FromStr;
 
-    fn _create_test_resolver_pubkey() -> PublicKey {
-        PublicKey::from_str("03789ed0bb717d88f7d321a368d905e7430207ebbd82bd342cf11ae157a7ace5fd")
-            .unwrap()
+    fn _create_test_resolver_pubkey() -> Option<PublicKey> {
+        Some(PublicKey::from_str("03789ed0bb717d88f7d321a368d905e7430207ebbd82bd342cf11ae157a7ace5fd")
+            .unwrap())
     }
 
     #[test]

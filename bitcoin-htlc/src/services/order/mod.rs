@@ -22,7 +22,7 @@ pub struct OrderService {
     bitcoin_client: BitcoinClient,
     #[allow(dead_code)]
     network: Network,
-    resolver_pubkey: PublicKey,
+    resolver_pubkey: Option<PublicKey>,
 }
 
 impl OrderService {
@@ -32,10 +32,9 @@ impl OrderService {
             Ok("testnet") | _ => Network::Testnet,
         };
 
-        let resolver_pubkey_hex = env::var("RESOLVER_PUBLIC_KEY")
-            .unwrap_or_else(|_| "03789ed0bb717d88f7d321a368d905e7430207ebbd82bd342cf11ae157a7ace5fd".to_string());
-        let resolver_pubkey = PublicKey::from_str(&resolver_pubkey_hex)
-            .expect("Invalid RESOLVER_PUBLIC_KEY");
+        // Resolver public key is optional - only needed if Thunder Portal acts as a resolver
+        let resolver_pubkey = env::var("RESOLVER_PUBLIC_KEY").ok()
+            .and_then(|key| PublicKey::from_str(&key).ok());
 
         Self {
             pool,
@@ -50,7 +49,12 @@ impl OrderService {
     }
 
     pub async fn create_order(&self, request: CreateOrderRequest) -> Result<CreateOrderResponse, ApiError> {
-        create_order(&self.pool, &self.resolver_pubkey, request).await
+        // Use resolver pubkey from request if provided, otherwise use configured one (if any)
+        let resolver_pubkey = request.resolver_public_key.as_ref()
+            .and_then(|key| PublicKey::from_str(key).ok())
+            .or(self.resolver_pubkey);
+            
+        create_order(&self.pool, resolver_pubkey.as_ref(), request).await
     }
 
     pub async fn get_order(&self, order_id: Uuid) -> Result<OrderDetails, ApiError> {
