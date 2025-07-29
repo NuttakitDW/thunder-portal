@@ -20,11 +20,30 @@ pub fn configure_routes() -> Scope {
 mod tests {
     use super::*;
     use actix_web::{test, App};
+    use sqlx::sqlite::SqlitePoolOptions;
+    use crate::AppState;
 
     #[actix_rt::test]
     async fn test_routes_configuration() {
+        // Create a test database pool
+        let pool = SqlitePoolOptions::new()
+            .max_connections(1)
+            .connect(":memory:")
+            .await
+            .expect("Failed to create test database");
+
+        // Run migrations
+        sqlx::migrate!("./migrations")
+            .run(&pool)
+            .await
+            .expect("Failed to run migrations");
+
+        // Create app state
+        let app_state = AppState::new(pool);
+
         let app = test::init_service(
             App::new()
+                .app_data(web::Data::new(app_state))
                 .service(configure_routes())
         ).await;
 

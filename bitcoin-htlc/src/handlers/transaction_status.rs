@@ -73,7 +73,6 @@ pub async fn get_transaction_status(
 
 #[cfg(test)]
 mod tests {
-    use super::*;
 
     #[test]
     fn test_transaction_id_validation() {

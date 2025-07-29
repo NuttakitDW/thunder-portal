@@ -136,8 +136,6 @@ pub async fn health_check(state: web::Data<AppState>) -> HttpResponse {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use actix_web::http::StatusCode;
 
     // TODO: Fix these tests - they need AppState mocking
     // #[actix_rt::test]
