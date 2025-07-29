@@ -1,7 +1,7 @@
 use bitcoin::{PublicKey, secp256k1::{Secp256k1, SecretKey}};
 use std::str::FromStr;
-use thunder_portal::services::htlc_builder::HtlcBuilder;
-use thunder_portal::models::htlc::HtlcParams;
+use thunder_portal::services::{build_htlc_script, generate_preimage, hash_preimage};
+use thunder_portal::models::HtlcParams;
 
 #[test]
 fn test_htlc_script_creation() {
@@ -21,7 +21,7 @@ fn test_htlc_script_creation() {
     };
     
     // Generate payment hash
-    let (_, payment_hash) = HtlcBuilder::generate_preimage();
+    let (_, payment_hash) = generate_preimage();
     
     // Create HTLC parameters
     let params = HtlcParams {
@@ -32,7 +32,7 @@ fn test_htlc_script_creation() {
     };
     
     // Build script
-    let script = HtlcBuilder::build_htlc_script(&params).unwrap();
+    let script = build_htlc_script(&params).unwrap();
     
     // Verify we got a P2SH address
     assert!(script.p2sh_address.starts_with("2") || script.p2sh_address.starts_with("tb"));
@@ -42,14 +42,14 @@ fn test_htlc_script_creation() {
 
 #[test]
 fn test_preimage_generation() {
-    let (preimage, payment_hash) = HtlcBuilder::generate_preimage();
+    let (preimage, payment_hash) = generate_preimage();
     
     // Verify sizes
     assert_eq!(preimage.len(), 32);
     assert_eq!(payment_hash.len(), 32);
     
     // Verify the hash matches
-    let computed_hash = HtlcBuilder::hash_preimage(&preimage);
+    let computed_hash = hash_preimage(&preimage);
     assert_eq!(payment_hash, computed_hash);
 }
 
@@ -63,7 +63,7 @@ fn test_htlc_script_with_real_keys() {
         "02789ed0bb717d88f7d321a368d905e7430207ebbd82bd342cf11ae157a7ace5fd"
     ).unwrap();
 
-    let (_, payment_hash) = HtlcBuilder::generate_preimage();
+    let (_, payment_hash) = generate_preimage();
 
     let params = HtlcParams {
         recipient_pubkey,
@@ -72,7 +72,7 @@ fn test_htlc_script_with_real_keys() {
         timeout: 500000,
     };
 
-    let script = HtlcBuilder::build_htlc_script(&params).unwrap();
+    let script = build_htlc_script(&params).unwrap();
     
     // Verify P2SH address format for testnet
     assert!(script.p2sh_address.starts_with("2") || script.p2sh_address.starts_with("tb"));
@@ -104,8 +104,8 @@ fn test_htlc_script_deterministic() {
     };
 
     // Build script twice with same parameters
-    let script1 = HtlcBuilder::build_htlc_script(&params).unwrap();
-    let script2 = HtlcBuilder::build_htlc_script(&params).unwrap();
+    let script1 = build_htlc_script(&params).unwrap();
+    let script2 = build_htlc_script(&params).unwrap();
     
     // Should produce identical results
     assert_eq!(script1.p2sh_address, script2.p2sh_address);

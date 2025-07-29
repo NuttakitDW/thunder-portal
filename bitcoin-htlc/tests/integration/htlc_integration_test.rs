@@ -4,10 +4,13 @@ use bitcoin::{
 };
 use std::str::FromStr;
 use thunder_portal::services::{
-    htlc_builder::HtlcBuilder,
-    transaction_builder::TransactionBuilder,
+    build_htlc_script,
+    generate_preimage,
+    create_funding_transaction,
+    create_claim_transaction,
+    create_refund_transaction,
 };
-use thunder_portal::models::htlc::HtlcParams;
+use thunder_portal::models::HtlcParams;
 
 /// Integration test demonstrating the full HTLC atomic swap flow
 #[test]
@@ -47,7 +50,7 @@ fn test_full_htlc_atomic_swap_flow() {
     
     // Step 2: Bob generates the secret preimage
     println!("\nStep 2: Bob generates secret preimage");
-    let (preimage, payment_hash) = HtlcBuilder::generate_preimage();
+    let (preimage, payment_hash) = generate_preimage();
     println!("  Payment hash: {}", hex::encode(&payment_hash));
     println!("  (Bob keeps preimage secret: {})", hex::encode(&preimage));
     
@@ -64,13 +67,13 @@ fn test_full_htlc_atomic_swap_flow() {
     
     // Step 4: Build HTLC script
     println!("\nStep 4: Building HTLC script");
-    let htlc_script = HtlcBuilder::build_htlc_script(&htlc_params).unwrap();
+    let htlc_script = build_htlc_script(&htlc_params).unwrap();
     println!("  HTLC P2SH address: {}", htlc_script.p2sh_address);
     println!("  Redeem script size: {} bytes", htlc_script.redeem_script.len());
     
     // Step 5: Alice funds the HTLC
     println!("\nStep 5: Alice creates funding transaction");
-    let builder = TransactionBuilder::new(network);
+    // No need for builder anymore, using functions directly
     
     // Simulate Alice's UTXO
     let alice_utxo = OutPoint {
@@ -85,13 +88,12 @@ fn test_full_htlc_atomic_swap_flow() {
         .require_network(network)
         .unwrap();
     
-    let funding_tx = builder.create_funding_tx(
-        alice_utxo,
-        alice_utxo_value,
+    let funding_tx = create_funding_transaction(
+        vec![(alice_utxo, alice_utxo_value)],
         &htlc_address,
         htlc_amount,
         &alice_address,
-        10, // 10 sats/vbyte fee rate
+        Amount::from_sat(10_000), // Fixed fee
     ).unwrap();
     
     println!("  Funding TX created with {} inputs and {} outputs", 
@@ -112,7 +114,7 @@ fn test_full_htlc_atomic_swap_flow() {
         vout: 0,
     };
     
-    let claim_tx = builder.create_claim_tx(
+    let claim_tx = create_claim_transaction(
         htlc_utxo,
         htlc_amount,
         &htlc_script.redeem_script,
@@ -134,7 +136,7 @@ fn test_full_htlc_atomic_swap_flow() {
     // Step 7: Alternative - timeout scenario
     println!("\nStep 7: Alternative scenario - timeout refund");
     
-    let refund_tx = builder.create_refund_tx(
+    let refund_tx = create_refund_transaction(
         htlc_utxo,
         htlc_amount,
         &htlc_script.redeem_script,
@@ -158,7 +160,7 @@ fn test_htlc_claim_validation() {
     println!("\n=== Testing HTLC claim validation ===");
     
     let secp = Secp256k1::new();
-    let builder = TransactionBuilder::new(Network::Testnet);
+    // Using transaction functions directly
     
     // Setup keys
     let alice_sk = SecretKey::from_slice(&[1u8; 32]).unwrap();
@@ -175,7 +177,7 @@ fn test_htlc_claim_validation() {
     
     // Generate preimage
     let correct_preimage = [0x42u8; 32];
-    let payment_hash = HtlcBuilder::hash_preimage(&correct_preimage);
+    let payment_hash = thunder_portal::services::hash_preimage(&correct_preimage);
     let wrong_preimage = [0xFF; 32];
     
     // Create HTLC
@@ -186,7 +188,7 @@ fn test_htlc_claim_validation() {
         timeout: 500_000,
     };
     
-    let htlc_script = HtlcBuilder::build_htlc_script(&params).unwrap();
+    let htlc_script = build_htlc_script(&params).unwrap();
     
     // Test data
     let htlc_outpoint = OutPoint {
@@ -201,7 +203,7 @@ fn test_htlc_claim_validation() {
     
     // Test 1: Correct preimage should work
     println!("\nTest 1: Claiming with correct preimage");
-    let _claim_tx = builder.create_claim_tx(
+    let _claim_tx = create_claim_transaction(
         htlc_outpoint,
         htlc_amount,
         &htlc_script.redeem_script,
@@ -214,7 +216,7 @@ fn test_htlc_claim_validation() {
     
     // Test 2: Wrong preimage would fail when broadcast (can't test here without actual validation)
     println!("\nTest 2: Creating claim TX with wrong preimage");
-    let _wrong_claim_tx = builder.create_claim_tx(
+    let _wrong_claim_tx = create_claim_transaction(
         htlc_outpoint,
         htlc_amount,
         &htlc_script.redeem_script,
@@ -227,7 +229,7 @@ fn test_htlc_claim_validation() {
     
     // Test 3: Wrong key would also fail
     println!("\nTest 3: Creating claim TX with wrong key");
-    let _wrong_claim_key_tx = builder.create_claim_tx(
+    let _wrong_claim_key_tx = create_claim_transaction(
         htlc_outpoint,
         htlc_amount,
         &htlc_script.redeem_script,
@@ -259,13 +261,13 @@ fn test_htlc_edge_cases() {
         timeout: 0xFFFFFF, // Near max value
     };
     
-    let script = HtlcBuilder::build_htlc_script(&params).unwrap();
+    let script = build_htlc_script(&params).unwrap();
     assert!(!script.redeem_script.is_empty());
     
     // Test with minimum timeout
     let mut min_params = params.clone();
     min_params.timeout = 1;
-    let min_script = HtlcBuilder::build_htlc_script(&min_params).unwrap();
+    let min_script = build_htlc_script(&min_params).unwrap();
     assert!(!min_script.redeem_script.is_empty());
     
     println!("Edge case tests passed!");

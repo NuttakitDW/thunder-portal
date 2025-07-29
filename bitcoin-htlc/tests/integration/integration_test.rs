@@ -1,12 +1,12 @@
 use actix_web::{test, web, App};
 use serde_json::json;
-use thunder_portal::api;
+use thunder_portal::handlers;
 
 #[actix_rt::test]
 async fn test_health_check() {
     let app = test::init_service(
         App::new()
-            .route("/v1/health", web::get().to(api::health_check))
+            .route("/v1/health", web::get().to(handlers::health_check))
     ).await;
 
     let req = test::TestRequest::get()
@@ -43,8 +43,8 @@ async fn test_create_order_eth_to_btc() {
 async fn test_htlc_script_generation() {
     use bitcoin::{PublicKey};
     use std::str::FromStr;
-    use thunder_portal::services::htlc_builder::HtlcBuilder;
-    use thunder_portal::models::htlc::HtlcParams;
+    use thunder_portal::services::{generate_preimage, build_htlc_script};
+    use thunder_portal::models::HtlcParams;
 
     let recipient_pubkey = PublicKey::from_str(
         "03789ed0bb717d88f7d321a368d905e7430207ebbd82bd342cf11ae157a7ace5fd"
@@ -54,7 +54,7 @@ async fn test_htlc_script_generation() {
         "02789ed0bb717d88f7d321a368d905e7430207ebbd82bd342cf11ae157a7ace5fd"
     ).unwrap();
 
-    let (_, payment_hash) = HtlcBuilder::generate_preimage();
+    let (_, payment_hash) = generate_preimage();
 
     let params = HtlcParams {
         recipient_pubkey,
@@ -63,7 +63,7 @@ async fn test_htlc_script_generation() {
         timeout: 500000,
     };
 
-    let script = HtlcBuilder::build_htlc_script(&params).unwrap();
+    let script = build_htlc_script(&params).unwrap();
     
     // Verify P2SH address format for testnet
     assert!(script.p2sh_address.starts_with("2") || script.p2sh_address.starts_with("tb"));
@@ -73,16 +73,16 @@ async fn test_htlc_script_generation() {
 
 #[test]
 async fn test_preimage_hash_generation() {
-    use thunder_portal::services::htlc_builder::HtlcBuilder;
+    use thunder_portal::services::{generate_preimage, hash_preimage};
 
-    let (preimage, payment_hash) = HtlcBuilder::generate_preimage();
+    let (preimage, payment_hash) = generate_preimage();
     
     // Verify sizes
     assert_eq!(preimage.len(), 32);
     assert_eq!(payment_hash.len(), 32);
     
     // Verify hash matches
-    let computed_hash = HtlcBuilder::hash_preimage(&preimage);
+    let computed_hash = hash_preimage(&preimage);
     assert_eq!(payment_hash, computed_hash);
 }
 
