@@ -4,46 +4,79 @@ use thiserror::Error;
 
 #[derive(Error, Debug)]
 pub enum ApiError {
-    #[error("Bad request: {0}")]
-    BadRequest(String),
+    #[error("{message}")]
+    BadRequest {
+        code: String,
+        message: String,
+        details: Option<serde_json::Value>,
+    },
     
-    #[error("Not found: {0}")]
-    NotFound(String),
+    #[error("{message}")]
+    NotFound {
+        code: String,
+        message: String,
+        details: Option<serde_json::Value>,
+    },
     
-    #[error("Internal server error: {0}")]
-    InternalError(String),
+    #[error("{message}")]
+    InternalError {
+        code: String,
+        message: String,
+        details: Option<serde_json::Value>,
+    },
     
-    #[error("Bitcoin error: {0}")]
-    BitcoinError(String),
+    #[error("{message}")]
+    Unauthorized {
+        code: String,
+        message: String,
+        details: Option<serde_json::Value>,
+    },
     
-    #[error("Database error: {0}")]
-    DatabaseError(String),
-    
-    #[error("Validation error: {0}")]
-    ValidationError(String),
-    
-    #[error("Unauthorized")]
-    Unauthorized,
-    
-    #[error("Timeout error: {0}")]
-    TimeoutError(String),
+    #[error("{message}")]
+    Conflict {
+        code: String,
+        message: String,
+        details: Option<serde_json::Value>,
+    },
 }
 
 #[derive(Serialize)]
 struct ErrorResponse {
-    error: String,
+    code: String,
     message: String,
     #[serde(skip_serializing_if = "Option::is_none")]
-    details: Option<String>,
+    details: Option<serde_json::Value>,
 }
 
 impl ResponseError for ApiError {
     fn error_response(&self) -> HttpResponse {
         let status = self.status_code();
-        let error_response = ErrorResponse {
-            error: format!("{:?}", self).split('(').next().unwrap_or("Unknown").to_string(),
-            message: self.to_string(),
-            details: None,
+        let error_response = match self {
+            ApiError::BadRequest { code, message, details } => ErrorResponse {
+                code: code.clone(),
+                message: message.clone(),
+                details: details.clone(),
+            },
+            ApiError::NotFound { code, message, details } => ErrorResponse {
+                code: code.clone(),
+                message: message.clone(),
+                details: details.clone(),
+            },
+            ApiError::InternalError { code, message, details } => ErrorResponse {
+                code: code.clone(),
+                message: message.clone(),
+                details: details.clone(),
+            },
+            ApiError::Unauthorized { code, message, details } => ErrorResponse {
+                code: code.clone(),
+                message: message.clone(),
+                details: details.clone(),
+            },
+            ApiError::Conflict { code, message, details } => ErrorResponse {
+                code: code.clone(),
+                message: message.clone(),
+                details: details.clone(),
+            },
         };
         
         HttpResponse::build(status).json(error_response)
@@ -51,38 +84,51 @@ impl ResponseError for ApiError {
     
     fn status_code(&self) -> StatusCode {
         match self {
-            ApiError::BadRequest(_) => StatusCode::BAD_REQUEST,
-            ApiError::NotFound(_) => StatusCode::NOT_FOUND,
-            ApiError::Unauthorized => StatusCode::UNAUTHORIZED,
-            ApiError::ValidationError(_) => StatusCode::UNPROCESSABLE_ENTITY,
-            _ => StatusCode::INTERNAL_SERVER_ERROR,
+            ApiError::BadRequest { .. } => StatusCode::BAD_REQUEST,
+            ApiError::NotFound { .. } => StatusCode::NOT_FOUND,
+            ApiError::Unauthorized { .. } => StatusCode::UNAUTHORIZED,
+            ApiError::Conflict { .. } => StatusCode::CONFLICT,
+            ApiError::InternalError { .. } => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }
 }
 
 impl From<sqlx::Error> for ApiError {
     fn from(err: sqlx::Error) -> Self {
-        ApiError::DatabaseError(err.to_string())
+        ApiError::InternalError {
+            code: "DATABASE_ERROR".to_string(),
+            message: err.to_string(),
+            details: None,
+        }
     }
 }
 
-// Remove bitcoin::Error conversion as it doesn't exist in newer bitcoin versions
-// Specific bitcoin errors will be handled as strings
-
 impl From<reqwest::Error> for ApiError {
     fn from(err: reqwest::Error) -> Self {
-        ApiError::InternalError(format!("HTTP request failed: {}", err))
+        ApiError::InternalError {
+            code: "HTTP_ERROR".to_string(),
+            message: format!("HTTP request failed: {}", err),
+            details: None,
+        }
     }
 }
 
 impl From<validator::ValidationErrors> for ApiError {
     fn from(err: validator::ValidationErrors) -> Self {
-        ApiError::ValidationError(err.to_string())
+        ApiError::BadRequest {
+            code: "VALIDATION_ERROR".to_string(),
+            message: "Validation failed".to_string(),
+            details: Some(serde_json::to_value(&err).unwrap_or(serde_json::Value::Null)),
+        }
     }
 }
 
 impl From<bitcoin::key::Error> for ApiError {
     fn from(err: bitcoin::key::Error) -> Self {
-        ApiError::BitcoinError(err.to_string())
+        ApiError::InternalError {
+            code: "BITCOIN_KEY_ERROR".to_string(),
+            message: err.to_string(),
+            details: None,
+        }
     }
 }

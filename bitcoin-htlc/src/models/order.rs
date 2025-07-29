@@ -5,9 +5,10 @@ use uuid::Uuid;
 use validator::Validate;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum SwapDirection {
+    #[serde(rename = "ETH_TO_BTC")]
     EthToBtc,
+    #[serde(rename = "BTC_TO_ETH")]
     BtcToEth,
 }
 
@@ -32,37 +33,77 @@ pub enum OrderStatus {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TokenInfo {
-    pub address: String,
     pub symbol: String,
-    pub decimals: u8,
+    #[serde(with = "address_format")]
+    pub address: String,
+}
+
+mod address_format {
+    use serde::{self, Deserialize, Deserializer, Serializer};
+    use regex::Regex;
+    use once_cell::sync::Lazy;
+    
+    static ADDRESS_PATTERN: Lazy<Regex> = Lazy::new(|| {
+        Regex::new(r"^0x[a-fA-F0-9]{40}$").unwrap()
+    });
+    
+    pub fn serialize<S>(address: &str, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        serializer.serialize_str(address)
+    }
+    
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<String, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let s = String::deserialize(deserializer)?;
+        if ADDRESS_PATTERN.is_match(&s) {
+            Ok(s)
+        } else {
+            Err(serde::de::Error::custom("Invalid Ethereum address format"))
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Validate)]
+#[serde(rename_all = "camelCase")]
 pub struct CreateOrderRequest {
     pub direction: SwapDirection,
     
+    #[validate(regex(path = "crate::utils::AMOUNT_REGEX"))]
+    pub amount: String,
+    
     // For ETH_TO_BTC
-    #[validate(range(min = 10000, max = 100000000))]
-    pub bitcoin_amount: Option<u64>,
+    #[serde(rename = "fromToken")]
+    pub from_token: Option<TokenInfo>,
+    #[serde(rename = "bitcoinAddress")]
     #[validate(regex(path = "crate::utils::BITCOIN_ADDRESS_REGEX"))]
     pub bitcoin_address: Option<String>,
+    #[serde(rename = "bitcoinPublicKey")]
     #[validate(regex(path = "crate::utils::PUBKEY_REGEX"))]
     pub bitcoin_public_key: Option<String>,
     
     // For BTC_TO_ETH
+    #[serde(rename = "toToken")]
     pub to_token: Option<TokenInfo>,
+    #[serde(rename = "ethereumAddress")]
     #[validate(regex(path = "crate::utils::ETH_ADDRESS_REGEX"))]
     pub ethereum_address: Option<String>,
     
     // HTLC parameters
+    #[serde(rename = "preimageHash")]
     #[validate(regex(path = "crate::utils::HASH_REGEX"))]
     pub preimage_hash: String,
     
     // Resolver configuration
+    #[serde(rename = "resolverPublicKey")]
     #[validate(regex(path = "crate::utils::PUBKEY_REGEX"))]
     pub resolver_public_key: Option<String>,
     
     // Confirmation requirements
+    #[serde(rename = "confirmationRequirements")]
     pub confirmation_requirements: Option<ConfirmationRequirements>,
     
     // Timeout configuration

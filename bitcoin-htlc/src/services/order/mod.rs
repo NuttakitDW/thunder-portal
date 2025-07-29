@@ -44,6 +44,10 @@ impl OrderService {
             resolver_pubkey,
         }
     }
+    
+    pub fn bitcoin_client(&self) -> &BitcoinClient {
+        &self.bitcoin_client
+    }
 
     pub async fn create_order(&self, request: CreateOrderRequest) -> Result<CreateOrderResponse, ApiError> {
         create_order(&self.pool, &self.resolver_pubkey, request).await

@@ -11,7 +11,11 @@ pub async fn get_block_height(client: &Client, base_url: &str) -> Result<u32, Ap
         .await?;
 
     response.parse()
-        .map_err(|e| ApiError::BitcoinError(format!("Failed to parse block height: {}", e)))
+        .map_err(|e| ApiError::InternalError {
+            code: "BITCOIN_ERROR".to_string(),
+            message: format!("Failed to parse block height: {}", e),
+            details: None,
+        })
 }
 
 #[cfg(test)]

@@ -3,6 +3,8 @@ pub mod handlers;
 pub mod routes;
 pub mod services;
 pub mod utils;
+pub mod swagger;
+pub mod middleware;
 
 use actix_web::web;
 use sqlx::SqlitePool;
@@ -28,5 +30,6 @@ impl AppState {
 /// Configure the application
 pub fn configure_app(cfg: &mut web::ServiceConfig, state: AppState) {
     cfg.app_data(web::Data::new(state))
-        .service(routes::configure_routes());
+        .service(routes::configure_routes())
+        .configure(swagger::configure_swagger);
 }

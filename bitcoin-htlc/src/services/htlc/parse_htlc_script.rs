@@ -5,7 +5,11 @@ use crate::models::{ApiError, HtlcParams};
 pub fn parse_htlc_script(_script: &[u8]) -> Result<HtlcParams, ApiError> {
     // This is a simplified parser - in production you'd want more robust parsing
     // For now, we'll return an error as this is complex to implement correctly
-    Err(ApiError::BitcoinError("HTLC script parsing not implemented".to_string()))
+    Err(ApiError::InternalError {
+        code: "BITCOIN_SCRIPT_ERROR".to_string(),
+        message: "HTLC script parsing not implemented".to_string(),
+        details: None,
+    })
 }
 
 #[cfg(test)]
@@ -19,7 +23,7 @@ mod tests {
         
         assert!(result.is_err());
         match result {
-            Err(ApiError::BitcoinError(message)) => {
+            Err(ApiError::InternalError { message, .. }) => {
                 assert_eq!(message, "HTLC script parsing not implemented");
             }
             _ => panic!("Expected BitcoinError"),

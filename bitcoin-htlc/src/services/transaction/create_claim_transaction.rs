@@ -20,9 +20,11 @@ pub fn create_claim_transaction(
     fee: Amount,
 ) -> Result<Transaction, ApiError> {
     if htlc_amount <= fee {
-        return Err(ApiError::BitcoinError(
-            "HTLC amount must be greater than fee".to_string()
-        ));
+        return Err(ApiError::InternalError {
+            code: "BITCOIN_TRANSACTION_ERROR".to_string(),
+            message: "HTLC amount must be greater than fee".to_string(),
+            details: None,
+        });
     }
     
     let claim_amount = htlc_amount - fee;
@@ -53,7 +55,11 @@ pub fn create_claim_transaction(
             htlc_amount,
             EcdsaSighashType::All,
         )
-        .map_err(|e| ApiError::BitcoinError(format!("Failed to compute sighash: {}", e)))?;
+        .map_err(|e| ApiError::InternalError {
+            code: "BITCOIN_TRANSACTION_ERROR".to_string(),
+            message: format!("Failed to compute sighash: {}", e),
+            details: None,
+        })?;
     
     let message = Message::from_digest(sighash.to_byte_array());
     let signature = secp.sign_ecdsa(&message, claim_key);

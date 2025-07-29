@@ -30,6 +30,10 @@ pub static FUSION_SIGNATURE_REGEX: Lazy<Regex> = Lazy::new(|| {
     Regex::new(r"^0x[a-fA-F0-9]{130}$").unwrap()
 });
 
+pub static AMOUNT_REGEX: Lazy<Regex> = Lazy::new(|| {
+    Regex::new(r"^\d+$").unwrap()
+});
+
 /// Convert hex string to bytes
 #[allow(dead_code)]
 pub fn hex_to_bytes(hex: &str) -> Result<Vec<u8>, hex::FromHexError> {

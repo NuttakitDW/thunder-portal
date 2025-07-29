@@ -24,9 +24,11 @@ pub async fn wait_for_confirmations(
         
         attempts += 1;
         if attempts >= MAX_ATTEMPTS {
-            return Err(ApiError::TimeoutError(
-                format!("Transaction {} not confirmed after {} attempts", transaction_id, MAX_ATTEMPTS)
-            ));
+            return Err(ApiError::InternalError {
+                code: "TIMEOUT_ERROR".to_string(),
+                message: format!("Transaction {} not confirmed after {} attempts", transaction_id, MAX_ATTEMPTS),
+                details: None,
+            });
         }
         
         sleep(Duration::from_secs(5)).await;

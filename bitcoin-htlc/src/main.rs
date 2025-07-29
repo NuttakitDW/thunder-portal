@@ -5,7 +5,7 @@ use env_logger::Env;
 use log::info;
 use sqlx::sqlite::SqlitePoolOptions;
 use std::env;
-use thunder_portal::{AppState, configure_app};
+use thunder_portal::{AppState, configure_app, middleware::ApiKeyAuth};
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -50,6 +50,7 @@ async fn main() -> std::io::Result<()> {
         App::new()
             .wrap(cors)
             .wrap(middleware::Logger::default())
+            .wrap(ApiKeyAuth)
             .configure(|cfg| configure_app(cfg, app_state.clone()))
     })
     .bind(format!("{}:{}", host, port))?

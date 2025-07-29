@@ -15,7 +15,11 @@ pub async fn submit_fusion_proof(
 ) -> Result<FusionProofResponse, ApiError> {
     // TODO: Fix SQLx offline mode
     let _ = (order_id, proof, bitcoin_client); // Acknowledge parameters
-    return Err(ApiError::InternalError("SQLx queries disabled for testing".to_string()));
+    return Err(ApiError::InternalError {
+        code: "SQLX_DISABLED".to_string(),
+        message: "SQLx queries disabled for testing".to_string(),
+        details: None,
+    });
     
     #[allow(unreachable_code)]
     {
@@ -59,15 +63,21 @@ pub async fn submit_fusion_proof(
     
     // Verify order is in correct state
     if order.status != "created" && order.status != "awaiting_fusion_proof" {
-        return Err(ApiError::BadRequest(
-            format!("Order is in {} state, cannot submit fusion proof", order.status)
-        ));
+        return Err(ApiError::BadRequest {
+            code: "INVALID_ORDER_STATE".to_string(),
+            message: format!("Order is in {} state, cannot submit fusion proof", order.status),
+            details: None,
+        });
     }
     
     // Parse bitcoin public key
     let bitcoin_pubkey = PublicKey::from_str(
         order.bitcoin_public_key.as_ref()
-            .ok_or_else(|| ApiError::InternalError("Bitcoin public key not set".to_string()))?
+            .ok_or_else(|| ApiError::InternalError {
+                code: "MISSING_BITCOIN_KEY".to_string(),
+                message: "Bitcoin public key not set".to_string(),
+                details: None,
+            })?
     )?;
     
     let resolver_pubkey = PublicKey::from_str(&order.resolver_public_key)?;
@@ -78,7 +88,11 @@ pub async fn submit_fusion_proof(
     
     // Create HTLC
     let payment_hash = hex::decode(&order.preimage_hash)
-        .map_err(|_| ApiError::BadRequest("Invalid preimage hash".to_string()))?;
+        .map_err(|_| ApiError::BadRequest {
+            code: "INVALID_PREIMAGE_HASH".to_string(),
+            message: "Invalid preimage hash".to_string(),
+            details: None,
+        })?;
     let mut payment_hash_array = [0u8; 32];
     payment_hash_array.copy_from_slice(&payment_hash);
     

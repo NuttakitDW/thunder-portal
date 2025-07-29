@@ -17,7 +17,11 @@ pub async fn broadcast_transaction(
         Ok(response.text().await?)
     } else {
         let error_text = response.text().await.unwrap_or_else(|_| "Unknown error".to_string());
-        Err(ApiError::BitcoinError(format!("Failed to broadcast transaction: {}", error_text)))
+        Err(ApiError::InternalError {
+            code: "BITCOIN_BROADCAST_ERROR".to_string(),
+            message: format!("Failed to broadcast transaction: {}", error_text),
+            details: None,
+        })
     }
 }
 

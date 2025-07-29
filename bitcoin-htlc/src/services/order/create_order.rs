@@ -10,20 +10,33 @@ pub async fn create_order(
     resolver_pubkey: &PublicKey,
     request: CreateOrderRequest,
 ) -> Result<CreateOrderResponse, ApiError> {
+    // Parse amount
+    let amount_value: u64 = request.amount.parse().map_err(|_| {
+        ApiError::BadRequest {
+            code: "INVALID_AMOUNT".to_string(),
+            message: "Invalid amount format".to_string(),
+            details: None,
+        }
+    })?;
+
     // Validate request based on direction
     match &request.direction {
         SwapDirection::EthToBtc => {
-            if request.bitcoin_amount.is_none() || request.bitcoin_address.is_none() {
-                return Err(ApiError::BadRequest(
-                    "bitcoin_amount and bitcoin_address are required for ETH_TO_BTC".to_string()
-                ));
+            if request.bitcoin_address.is_none() || request.from_token.is_none() {
+                return Err(ApiError::BadRequest {
+                    code: "MISSING_FIELDS".to_string(),
+                    message: "bitcoin_address and from_token are required for ETH_TO_BTC".to_string(),
+                    details: None,
+                });
             }
         }
         SwapDirection::BtcToEth => {
             if request.ethereum_address.is_none() || request.to_token.is_none() {
-                return Err(ApiError::BadRequest(
-                    "ethereum_address and to_token are required for BTC_TO_ETH".to_string()
-                ));
+                return Err(ApiError::BadRequest {
+                    code: "MISSING_FIELDS".to_string(),
+                    message: "ethereum_address and to_token are required for BTC_TO_ETH".to_string(),
+                    details: None,
+                });
             }
         }
     }
@@ -50,7 +63,10 @@ pub async fn create_order(
     };
     
     // Create temporary variables to avoid lifetime issues
-    let bitcoin_amount = request.bitcoin_amount.map(|amount| amount as i64);
+    let bitcoin_amount = match request.direction {
+        SwapDirection::EthToBtc => None, // Amount is in ETH/tokens
+        SwapDirection::BtcToEth => Some(amount_value as i64), // Amount is in BTC
+    };
     let resolver_pubkey_str = resolver_pubkey.to_string();
     let bitcoin_timeout = timeouts.bitcoin_blocks as i64;
     let ethereum_timeout = timeouts.ethereum_blocks as i64;
@@ -95,7 +111,7 @@ pub async fn create_order(
                 fusion_order_requirements: FusionOrderRequirements {
                     resolver_address: "0x1234567890123456789012345678901234567890".to_string(), // TODO: From config
                     preimage_hash: request.preimage_hash.clone(),
-                    token_amount: request.bitcoin_amount.unwrap_or(100000).to_string(),
+                    token_amount: request.amount.clone(),
                     deadline: (Utc::now().timestamp() + (ethereum_timeout as i64 * 15)).to_string(), // Estimate 15 sec/block
                 },
             };
@@ -116,7 +132,7 @@ pub async fn create_order(
                     user_public_key: request.bitcoin_public_key.clone().unwrap_or_default(),
                     resolver_public_key: resolver_pubkey.to_string(),
                     payment_hash: request.preimage_hash.clone(),
-                    amount: "100000".to_string(), // TODO: Get from request
+                    amount: request.amount.clone(),
                     timeout_height: bitcoin_timeout as u32,
                     script_template: "OP_IF OP_SHA256 <payment_hash> OP_EQUALVERIFY OP_DUP OP_HASH160 <user_pubkey_hash> OP_ELSE <timeout> OP_CHECKLOCKTIMEVERIFY OP_DROP OP_DUP OP_HASH160 <resolver_pubkey_hash> OP_ENDIF OP_EQUALVERIFY OP_CHECKSIG".to_string(),
                 },
@@ -159,7 +175,8 @@ mod tests {
     fn test_validate_eth_to_btc_request() {
         let request = CreateOrderRequest {
             direction: SwapDirection::EthToBtc,
-            bitcoin_amount: None,
+            amount: "1000000".to_string(),
+            from_token: None,
             bitcoin_address: None,
             bitcoin_public_key: None,
             to_token: None,
@@ -171,7 +188,7 @@ mod tests {
         };
 
         // Should fail validation
-        assert!(request.bitcoin_amount.is_none());
+        assert!(request.from_token.is_none());
         assert!(request.bitcoin_address.is_none());
     }
 

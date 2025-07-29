@@ -36,7 +36,11 @@ pub fn build_htlc_script(params: &HtlcParams) -> Result<HtlcScript, ApiError> {
     // Create P2SH address
     let network = Network::Testnet; // TODO: Make configurable
     let p2sh_address = Address::p2sh(&redeem_script, network)
-        .map_err(|error| ApiError::BitcoinError(format!("Failed to create P2SH address: {}", error)))?;
+        .map_err(|error| ApiError::InternalError {
+            code: "BITCOIN_ADDRESS_ERROR".to_string(),
+            message: format!("Failed to create P2SH address: {}", error),
+            details: None,
+        })?;
 
     Ok(HtlcScript {
         redeem_script: redeem_script.to_bytes(),

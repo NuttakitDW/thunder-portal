@@ -11,6 +11,9 @@ pub fn configure_routes() -> Scope {
         .route("/htlc/verify", web::post().to(handlers::verify_htlc))
         .route("/htlc/{htlc_id}/claim", web::post().to(handlers::claim_htlc))
         .route("/htlc/{htlc_id}/refund", web::post().to(handlers::refund_htlc))
+        .route("/transactions/{tx_id}/status", web::get().to(handlers::get_transaction_status))
+        .route("/webhooks", web::post().to(handlers::register_webhook))
+        .route("/fees/estimate", web::get().to(handlers::estimate_fees))
 }
 
 #[cfg(test)]

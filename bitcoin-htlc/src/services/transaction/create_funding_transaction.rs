@@ -21,9 +21,11 @@ pub fn create_funding_transaction(
     // Calculate change amount
     let total_output = htlc_amount + fee;
     if total_input < total_output {
-        return Err(ApiError::BitcoinError(
-            format!("Insufficient funds: {} < {}", total_input, total_output)
-        ));
+        return Err(ApiError::InternalError {
+            code: "BITCOIN_TRANSACTION_ERROR".to_string(),
+            message: format!("Insufficient funds: {} < {}", total_input, total_output),
+            details: None,
+        });
     }
     let change_amount = total_input - total_output;
     

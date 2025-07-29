@@ -9,7 +9,11 @@ pub async fn get_order(
 ) -> Result<OrderDetails, ApiError> {
     // TODO: Fix SQLx offline mode
     let _ = order_id; // Acknowledge the parameter  
-    return Err(ApiError::InternalError("SQLx queries disabled for testing".to_string()));
+    return Err(ApiError::InternalError {
+        code: "SQLX_DISABLED".to_string(),
+        message: "SQLx queries disabled for testing".to_string(),
+        details: None,
+    });
     
     // The following code is temporarily commented out due to SQLx offline mode issues
     #[allow(unreachable_code)]

@@ -20,9 +20,11 @@ pub fn create_refund_transaction(
     fee: Amount,
 ) -> Result<Transaction, ApiError> {
     if htlc_amount <= fee {
-        return Err(ApiError::BitcoinError(
-            "HTLC amount must be greater than fee".to_string()
-        ));
+        return Err(ApiError::InternalError {
+            code: "BITCOIN_TRANSACTION_ERROR".to_string(),
+            message: "HTLC amount must be greater than fee".to_string(),
+            details: None,
+        });
     }
     
     let refund_amount = htlc_amount - fee;
@@ -31,7 +33,11 @@ pub fn create_refund_transaction(
     let mut transaction = Transaction {
         version: Version::TWO,
         lock_time: LockTime::from_height(timeout)
-            .map_err(|e| ApiError::BitcoinError(format!("Invalid timeout height: {}", e)))?,
+            .map_err(|e| ApiError::InternalError {
+                code: "BITCOIN_TRANSACTION_ERROR".to_string(),
+                message: format!("Invalid timeout height: {}", e),
+                details: None,
+            })?,
         input: vec![TxIn {
             previous_output: htlc_outpoint,
             script_sig: ScriptBuf::new(),
@@ -54,7 +60,11 @@ pub fn create_refund_transaction(
             htlc_amount,
             EcdsaSighashType::All,
         )
-        .map_err(|e| ApiError::BitcoinError(format!("Failed to compute sighash: {}", e)))?;
+        .map_err(|e| ApiError::InternalError {
+            code: "BITCOIN_TRANSACTION_ERROR".to_string(),
+            message: format!("Failed to compute sighash: {}", e),
+            details: None,
+        })?;
     
     let message = Message::from_digest(sighash.to_byte_array());
     let signature = secp.sign_ecdsa(&message, refund_key);
