@@ -24,6 +24,7 @@ thunder_portal.db*
 
 # Logs
 *.log
+/logs/
 
 # Test coverage
 tarpaulin-report.html

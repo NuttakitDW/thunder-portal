@@ -10,6 +10,7 @@ help:
 	@echo "  make build        - Build the Rust project"
 	@echo "  make run          - Run the service locally"
 	@echo "  make test         - Run all tests"
+	@echo "  make logs         - Run tests with log capture and analysis"
 	@echo "  make clean        - Clean build artifacts"
 	@echo "  make docker-build - Build Docker image"
 	@echo "  make docker-run   - Run with Docker Compose"
@@ -42,10 +43,29 @@ test:
 test-one:
 	cargo test $(TEST) -- --nocapture
 
+# Run tests and capture logs for verification
+logs:
+	@echo "Running tests and capturing logs..."
+	@mkdir -p logs
+	@cargo test -- --nocapture 2>&1 | tee logs/test_output.log
+	@echo ""
+	@echo "Extracting relevant logs..."
+	@grep -E "(HTLC|htlc|atomic|swap|lock|hash|timelock|claim|refund|ERROR|WARN|FAIL)" logs/test_output.log > logs/htlc_specific.log || true
+	@grep -E "test result:|passed|failed|error" logs/test_output.log > logs/test_results.log || true
+	@echo ""
+	@echo "Logs saved to:"
+	@echo "  - logs/test_output.log    (full output)"
+	@echo "  - logs/htlc_specific.log  (HTLC-related logs)"
+	@echo "  - logs/test_results.log   (test results summary)"
+	@echo ""
+	@echo "Test Summary:"
+	@tail -n 5 logs/test_results.log || echo "No test results found"
+
 # Clean build artifacts
 clean:
 	cargo clean
 	rm -f thunder_portal.db
+	rm -rf logs/
 
 # Generate Bitcoin keys
 keys:
