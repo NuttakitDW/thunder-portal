@@ -9,7 +9,6 @@ pub struct HealthStatus {
     pub timestamp: String,
     pub version: String,
     pub dependencies: Dependencies,
-    pub resolver: ResolverStatus,
 }
 
 #[derive(Serialize)]
@@ -24,9 +23,7 @@ pub enum HealthStatusEnum {
 #[serde(rename_all = "camelCase")]
 pub struct Dependencies {
     pub bitcoin_node: BitcoinNodeStatus,
-    pub ethereum_rpc: EthereumRpcStatus,
     pub database: DatabaseStatus,
-    pub fusion_api: FusionApiStatus,
 }
 
 #[derive(Serialize)]
@@ -35,37 +32,11 @@ pub struct BitcoinNodeStatus {
     pub connected: bool,
     pub block_height: Option<u32>,
     pub network: String,
-    pub latency: Option<u32>,
-}
-
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct EthereumRpcStatus {
-    pub connected: bool,
-    pub chain_id: Option<u32>,
-    pub block_number: Option<u32>,
-    pub latency: Option<u32>,
 }
 
 #[derive(Serialize)]
 pub struct DatabaseStatus {
     pub connected: bool,
-    pub latency: Option<u32>,
-}
-
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct FusionApiStatus {
-    pub connected: bool,
-    pub latency: Option<u32>,
-}
-
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct ResolverStatus {
-    pub bitcoin_balance: String,
-    pub ethereum_balance: String,
-    pub active_orders: u32,
 }
 
 /// Health check handler to verify service status
@@ -101,27 +72,10 @@ pub async fn health_check(state: web::Data<AppState>) -> HttpResponse {
                 connected: bitcoin_connected,
                 block_height,
                 network: "testnet".to_string(),
-                latency: Some(10),
-            },
-            ethereum_rpc: EthereumRpcStatus {
-                connected: true, // Mock for now
-                chain_id: Some(11155111), // Sepolia
-                block_number: Some(4500000),
-                latency: Some(15),
             },
             database: DatabaseStatus {
                 connected: db_connected,
-                latency: Some(2),
             },
-            fusion_api: FusionApiStatus {
-                connected: true, // Mock for now
-                latency: Some(20),
-            },
-        },
-        resolver: ResolverStatus {
-            bitcoin_balance: "50000000".to_string(), // 0.5 BTC in sats
-            ethereum_balance: "5000000000000000000".to_string(), // 5 ETH in wei
-            active_orders: 0,
         },
     };
 
