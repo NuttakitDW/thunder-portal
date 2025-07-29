@@ -44,22 +44,22 @@ pub struct CreateOrderRequest {
     // For ETH_TO_BTC
     #[validate(range(min = 10000, max = 100000000))]
     pub bitcoin_amount: Option<u64>,
-    #[validate(regex = "^tb1[a-z0-9]{39,59}$|^[2mn][a-km-zA-HJ-NP-Z1-9]{25,34}$")]
+    #[validate(regex(path = "crate::utils::BITCOIN_ADDRESS_REGEX"))]
     pub bitcoin_address: Option<String>,
-    #[validate(regex = "^[a-fA-F0-9]{66}$")]
+    #[validate(regex(path = "crate::utils::PUBKEY_REGEX"))]
     pub bitcoin_public_key: Option<String>,
     
     // For BTC_TO_ETH
     pub to_token: Option<TokenInfo>,
-    #[validate(regex = "^0x[a-fA-F0-9]{40}$")]
+    #[validate(regex(path = "crate::utils::ETH_ADDRESS_REGEX"))]
     pub ethereum_address: Option<String>,
     
     // HTLC parameters
-    #[validate(regex = "^[a-fA-F0-9]{64}$")]
+    #[validate(regex(path = "crate::utils::HASH_REGEX"))]
     pub preimage_hash: String,
     
     // Resolver configuration
-    #[validate(regex = "^[a-fA-F0-9]{66}$")]
+    #[validate(regex(path = "crate::utils::PUBKEY_REGEX"))]
     pub resolver_public_key: Option<String>,
     
     // Confirmation requirements
@@ -133,9 +133,9 @@ pub struct HtlcRequirements {
 #[derive(Debug, Clone, Serialize, Deserialize, Validate)]
 pub struct FusionProofRequest {
     pub fusion_order_id: String,
-    #[validate(regex = "^0x[a-fA-F0-9]{64}$")]
+    #[validate(regex(path = "crate::utils::FUSION_ORDER_HASH_REGEX"))]
     pub fusion_order_hash: String,
-    #[validate(regex = "^0x[a-fA-F0-9]{130}$")]
+    #[validate(regex(path = "crate::utils::FUSION_SIGNATURE_REGEX"))]
     pub fusion_order_signature: String,
     pub fusion_order_data: Option<FusionOrderData>,
 }
@@ -177,10 +177,10 @@ pub struct Order {
     pub bitcoin_public_key: Option<String>,
     pub ethereum_address: Option<String>,
     pub resolver_public_key: String,
-    pub bitcoin_timeout_blocks: i32,
-    pub ethereum_timeout_blocks: i32,
-    pub bitcoin_confirmations_required: i32,
-    pub ethereum_confirmations_required: i32,
+    pub bitcoin_timeout_blocks: i64,
+    pub ethereum_timeout_blocks: i64,
+    pub bitcoin_confirmations_required: i64,
+    pub ethereum_confirmations_required: i64,
     pub fusion_order_id: Option<String>,
     pub fusion_order_hash: Option<String>,
     pub htlc_id: Option<Uuid>,

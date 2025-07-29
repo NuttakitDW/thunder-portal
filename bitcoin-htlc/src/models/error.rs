@@ -1,6 +1,5 @@
 use actix_web::{error::ResponseError, http::StatusCode, HttpResponse};
 use serde::Serialize;
-use std::fmt;
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -67,11 +66,8 @@ impl From<sqlx::Error> for ApiError {
     }
 }
 
-impl From<bitcoin::Error> for ApiError {
-    fn from(err: bitcoin::Error) -> Self {
-        ApiError::BitcoinError(err.to_string())
-    }
-}
+// Remove bitcoin::Error conversion as it doesn't exist in newer bitcoin versions
+// Specific bitcoin errors will be handled as strings
 
 impl From<reqwest::Error> for ApiError {
     fn from(err: reqwest::Error) -> Self {
@@ -82,5 +78,11 @@ impl From<reqwest::Error> for ApiError {
 impl From<validator::ValidationErrors> for ApiError {
     fn from(err: validator::ValidationErrors) -> Self {
         ApiError::ValidationError(err.to_string())
+    }
+}
+
+impl From<bitcoin::key::Error> for ApiError {
+    fn from(err: bitcoin::key::Error) -> Self {
+        ApiError::BitcoinError(err.to_string())
     }
 }

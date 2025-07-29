@@ -1,17 +1,49 @@
 use bitcoin::hashes::Hash;
 use sha2::{Sha256, Digest};
+use once_cell::sync::Lazy;
+use regex::Regex;
+use std::str::FromStr;
+use bitcoin::Address;
+
+// Validation regex patterns
+pub static BITCOIN_ADDRESS_REGEX: Lazy<Regex> = Lazy::new(|| {
+    Regex::new(r"^tb1[a-z0-9]{39,59}$|^[2mn][a-km-zA-HJ-NP-Z1-9]{25,34}$").unwrap()
+});
+
+pub static PUBKEY_REGEX: Lazy<Regex> = Lazy::new(|| {
+    Regex::new(r"^[a-fA-F0-9]{66}$").unwrap()
+});
+
+pub static ETH_ADDRESS_REGEX: Lazy<Regex> = Lazy::new(|| {
+    Regex::new(r"^0x[a-fA-F0-9]{40}$").unwrap()
+});
+
+pub static HASH_REGEX: Lazy<Regex> = Lazy::new(|| {
+    Regex::new(r"^[a-fA-F0-9]{64}$").unwrap()
+});
+
+pub static FUSION_ORDER_HASH_REGEX: Lazy<Regex> = Lazy::new(|| {
+    Regex::new(r"^0x[a-fA-F0-9]{64}$").unwrap()
+});
+
+pub static FUSION_SIGNATURE_REGEX: Lazy<Regex> = Lazy::new(|| {
+    Regex::new(r"^0x[a-fA-F0-9]{130}$").unwrap()
+});
 
 /// Convert hex string to bytes
+#[allow(dead_code)]
 pub fn hex_to_bytes(hex: &str) -> Result<Vec<u8>, hex::FromHexError> {
     hex::decode(hex)
 }
 
 /// Convert bytes to hex string
+#[allow(dead_code)]
 pub fn bytes_to_hex(bytes: &[u8]) -> String {
     hex::encode(bytes)
 }
 
 /// Calculate SHA256 hash
+#[allow(dead_code)]
 pub fn sha256(data: &[u8]) -> [u8; 32] {
     let mut hasher = Sha256::new();
     hasher.update(data);
@@ -19,19 +51,23 @@ pub fn sha256(data: &[u8]) -> [u8; 32] {
 }
 
 /// Calculate double SHA256 hash (used in Bitcoin)
+#[allow(dead_code)]
 pub fn sha256d(data: &[u8]) -> [u8; 32] {
     use bitcoin::hashes::sha256d;
     sha256d::Hash::hash(data).to_byte_array()
 }
 
 /// Validate Bitcoin address for the given network
+#[allow(dead_code)]
 pub fn validate_bitcoin_address(address: &str, network: bitcoin::Network) -> bool {
-    bitcoin::Address::from_str(address)
-        .map(|addr| addr.network == network)
-        .unwrap_or(false)
+    Address::from_str(address)
+        .ok()
+        .and_then(|addr| addr.require_network(network).ok())
+        .is_some()
 }
 
 /// Validate Ethereum address format
+#[allow(dead_code)]
 pub fn validate_ethereum_address(address: &str) -> bool {
     if !address.starts_with("0x") || address.len() != 42 {
         return false;
@@ -39,8 +75,6 @@ pub fn validate_ethereum_address(address: &str) -> bool {
     
     address[2..].chars().all(|c| c.is_ascii_hexdigit())
 }
-
-use std::str::FromStr;
 
 #[cfg(test)]
 mod tests {

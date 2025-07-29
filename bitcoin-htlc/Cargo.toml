@@ -3,6 +3,14 @@ name = "thunder-portal"
 version = "0.1.0"
 edition = "2021"
 
+[lib]
+name = "thunder_portal"
+path = "src/lib.rs"
+
+[[bin]]
+name = "thunder-portal"
+path = "src/main.rs"
+
 [dependencies]
 # Web framework
 actix-web = "4"
@@ -35,6 +43,9 @@ env_logger = "0.10"
 log = "0.4"
 thiserror = "1.0"
 anyhow = "1.0"
+rand = "0.8"
+once_cell = "1.19"
+regex = "1.10"
 
 # Validation
 validator = { version = "0.16", features = ["derive"] }

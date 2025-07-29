@@ -1,10 +1,12 @@
 use bitcoin::{
     absolute::LockTime,
-    hashes::Hash,
+    blockdata::script::{Builder, PushBytesBuf},
     key::Secp256k1,
     secp256k1::{Message, SecretKey},
     sighash::{EcdsaSighashType, SighashCache},
+    transaction::Version,
     Address, Amount, Network, OutPoint, ScriptBuf, Sequence, Transaction, TxIn, TxOut, Witness,
+    hashes::Hash,
 };
 use crate::models::ApiError;
 
@@ -33,7 +35,7 @@ impl TransactionBuilder {
     ) -> Result<Transaction, ApiError> {
         // Create transaction with one input and two outputs (HTLC + change)
         let mut tx = Transaction {
-            version: 2,
+            version: Version::TWO,
             lock_time: LockTime::ZERO,
             input: vec![TxIn {
                 previous_output: utxo,
@@ -83,7 +85,7 @@ impl TransactionBuilder {
         fee: Amount,
     ) -> Result<Transaction, ApiError> {
         let mut tx = Transaction {
-            version: 2,
+            version: Version::TWO,
             lock_time: LockTime::ZERO,
             input: vec![TxIn {
                 previous_output: htlc_outpoint,
@@ -104,20 +106,26 @@ impl TransactionBuilder {
             0,
             &ScriptBuf::from(htlc_redeem_script.to_vec()),
             EcdsaSighashType::All.to_u32(),
-        );
+        ).map_err(|e| ApiError::BitcoinError(format!("Failed to compute sighash: {}", e)))?;
 
-        let message = Message::from_slice(&sighash[..])
-            .map_err(|e| ApiError::BitcoinError(format!("Failed to create message: {}", e)))?;
+        let message = Message::from_digest(*sighash.as_byte_array())
+;
 
         let sig = self.secp.sign_ecdsa(&message, claim_key);
 
         // Build scriptSig: <sig> <preimage> <1> <redeem_script>
         let mut script_sig = Builder::new();
-        script_sig = script_sig.push_slice(&sig.serialize_der());
-        script_sig = script_sig.push_slice(&[EcdsaSighashType::All as u8]);
-        script_sig = script_sig.push_slice(preimage);
-        script_sig = script_sig.push_opcode(opcodes::all::OP_TRUE); // Select IF branch
-        script_sig = script_sig.push_slice(htlc_redeem_script);
+        let sig_bytes = PushBytesBuf::try_from(sig.serialize_der().to_vec())
+            .map_err(|_| ApiError::BitcoinError("Signature too large".to_string()))?;
+        script_sig = script_sig.push_slice(&sig_bytes);
+        script_sig = script_sig.push_int(EcdsaSighashType::All as i64);
+        let preimage_bytes = PushBytesBuf::try_from(preimage.to_vec())
+            .map_err(|_| ApiError::BitcoinError("Preimage too large".to_string()))?;
+        script_sig = script_sig.push_slice(&preimage_bytes);
+        script_sig = script_sig.push_int(1); // Select IF branch (OP_TRUE)
+        let redeem_script_bytes = PushBytesBuf::try_from(htlc_redeem_script.to_vec())
+            .map_err(|_| ApiError::BitcoinError("Redeem script too large".to_string()))?;
+        script_sig = script_sig.push_slice(&redeem_script_bytes);
 
         tx.input[0].script_sig = script_sig.into_script();
 
@@ -136,7 +144,7 @@ impl TransactionBuilder {
         fee: Amount,
     ) -> Result<Transaction, ApiError> {
         let mut tx = Transaction {
-            version: 2,
+            version: Version::TWO,
             lock_time: LockTime::from_height(timeout_height)
                 .map_err(|e| ApiError::BitcoinError(format!("Invalid timeout height: {}", e)))?,
             input: vec![TxIn {
@@ -158,24 +166,26 @@ impl TransactionBuilder {
             0,
             &ScriptBuf::from(htlc_redeem_script.to_vec()),
             EcdsaSighashType::All.to_u32(),
-        );
+        ).map_err(|e| ApiError::BitcoinError(format!("Failed to compute sighash: {}", e)))?;
 
-        let message = Message::from_slice(&sighash[..])
-            .map_err(|e| ApiError::BitcoinError(format!("Failed to create message: {}", e)))?;
+        let message = Message::from_digest(*sighash.as_byte_array())
+;
 
         let sig = self.secp.sign_ecdsa(&message, refund_key);
 
         // Build scriptSig: <sig> <0> <redeem_script>
         let mut script_sig = Builder::new();
-        script_sig = script_sig.push_slice(&sig.serialize_der());
-        script_sig = script_sig.push_slice(&[EcdsaSighashType::All as u8]);
-        script_sig = script_sig.push_opcode(opcodes::all::OP_FALSE); // Select ELSE branch
-        script_sig = script_sig.push_slice(htlc_redeem_script);
+        let sig_bytes = PushBytesBuf::try_from(sig.serialize_der().to_vec())
+            .map_err(|_| ApiError::BitcoinError("Signature too large".to_string()))?;
+        script_sig = script_sig.push_slice(&sig_bytes);
+        script_sig = script_sig.push_int(EcdsaSighashType::All as i64);
+        script_sig = script_sig.push_int(0); // Select ELSE branch (OP_FALSE)
+        let redeem_script_bytes = PushBytesBuf::try_from(htlc_redeem_script.to_vec())
+            .map_err(|_| ApiError::BitcoinError("Redeem script too large".to_string()))?;
+        script_sig = script_sig.push_slice(&redeem_script_bytes);
 
         tx.input[0].script_sig = script_sig.into_script();
 
         Ok(tx)
     }
 }
-
-use bitcoin::blockdata::{opcodes, script::Builder};

@@ -1,7 +1,7 @@
 use bitcoin::{
     blockdata::{opcodes, script::Builder},
     hashes::{sha256d, Hash},
-    Address, Network, PublicKey, ScriptBuf,
+    Address, Network,
 };
 use crate::models::{ApiError, HtlcParams, HtlcScript};
 
@@ -49,13 +49,15 @@ impl HtlcBuilder {
     }
 
     /// Parse HTLC script and extract parameters
-    pub fn parse_htlc_script(script: &[u8]) -> Result<HtlcParams, ApiError> {
+    #[allow(dead_code)]
+    pub fn parse_htlc_script(_script: &[u8]) -> Result<HtlcParams, ApiError> {
         // This is a simplified parser - in production you'd want more robust parsing
         // For now, we'll return an error as this is complex to implement correctly
         Err(ApiError::BitcoinError("HTLC script parsing not implemented".to_string()))
     }
 
     /// Verify that an HTLC script matches expected parameters
+    #[allow(dead_code)]
     pub fn verify_htlc_script(
         script: &[u8],
         expected_params: &HtlcParams,
@@ -65,6 +67,7 @@ impl HtlcBuilder {
     }
 
     /// Generate a payment hash from a preimage
+    #[allow(dead_code)]
     pub fn hash_preimage(preimage: &[u8]) -> [u8; 32] {
         use sha2::{Sha256, Digest};
         let mut hasher = Sha256::new();
@@ -73,6 +76,7 @@ impl HtlcBuilder {
     }
 
     /// Generate a random preimage
+    #[allow(dead_code)]
     pub fn generate_preimage() -> ([u8; 32], [u8; 32]) {
         use rand::Rng;
         let mut rng = rand::thread_rng();
@@ -97,11 +101,11 @@ mod tests {
         let sender_sk = SecretKey::from_slice(&[1u8; 32]).unwrap();
         let recipient_sk = SecretKey::from_slice(&[2u8; 32]).unwrap();
         
-        let sender_pubkey = PublicKey {
+        let sender_pubkey = bitcoin::PublicKey {
             inner: sender_sk.public_key(&secp),
             compressed: true,
         };
-        let recipient_pubkey = PublicKey {
+        let recipient_pubkey = bitcoin::PublicKey {
             inner: recipient_sk.public_key(&secp),
             compressed: true,
         };

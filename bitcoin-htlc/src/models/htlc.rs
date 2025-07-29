@@ -1,5 +1,4 @@
 use serde::{Deserialize, Serialize};
-use uuid::Uuid;
 use validator::Validate;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Validate)]
@@ -7,11 +6,11 @@ pub struct VerifyHtlcRequest {
     pub transaction_hex: String,
     pub output_index: u32,
     pub expected_amount: u64,
-    #[validate(regex = "^[a-fA-F0-9]{64}$")]
+    #[validate(regex(path = "crate::utils::HASH_REGEX"))]
     pub expected_payment_hash: String,
-    #[validate(regex = "^[a-fA-F0-9]{66}$")]
+    #[validate(regex(path = "crate::utils::PUBKEY_REGEX"))]
     pub expected_recipient_pubkey: String,
-    #[validate(regex = "^[a-fA-F0-9]{66}$")]
+    #[validate(regex(path = "crate::utils::PUBKEY_REGEX"))]
     pub expected_sender_pubkey: String,
 }
 
@@ -26,7 +25,7 @@ pub struct VerifyHtlcResponse {
 
 #[derive(Debug, Clone, Serialize, Deserialize, Validate)]
 pub struct ClaimRequest {
-    #[validate(regex = "^[a-fA-F0-9]{64}$")]
+    #[validate(regex(path = "crate::utils::HASH_REGEX"))]
     pub preimage: String,
     pub bitcoin_tx_hex: Option<String>,
 }
@@ -50,6 +49,7 @@ pub struct RefundResponse {
 #[derive(Debug, Clone)]
 pub struct HtlcScript {
     pub redeem_script: Vec<u8>,
+    #[allow(dead_code)]
     pub script_hash: [u8; 32],
     pub p2sh_address: String,
 }

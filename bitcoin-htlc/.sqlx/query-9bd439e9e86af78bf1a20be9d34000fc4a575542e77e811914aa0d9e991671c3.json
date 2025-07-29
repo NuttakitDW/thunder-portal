@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            UPDATE orders \n            SET fusion_order_id = ?, fusion_order_hash = ?, \n                status = 'fusion_proof_verified', updated_at = ?\n            WHERE id = ?\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 4
+    },
+    "nullable": []
+  },
+  "hash": "9bd439e9e86af78bf1a20be9d34000fc4a575542e77e811914aa0d9e991671c3"
+}

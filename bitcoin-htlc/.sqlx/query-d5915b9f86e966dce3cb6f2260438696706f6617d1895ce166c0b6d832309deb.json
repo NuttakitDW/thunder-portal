@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            UPDATE orders \n            SET htlc_id = ?, htlc_address = ?, htlc_redeem_script = ?, \n                status = 'bitcoin_htlc_created', updated_at = ?\n            WHERE id = ?\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 5
+    },
+    "nullable": []
+  },
+  "hash": "d5915b9f86e966dce3cb6f2260438696706f6617d1895ce166c0b6d832309deb"
+}

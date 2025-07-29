@@ -1,6 +1,6 @@
 use actix_web::{test, web, App};
 use serde_json::json;
-use thunder_portal::*;
+use thunder_portal::api;
 
 #[actix_rt::test]
 async fn test_health_check() {
@@ -23,7 +23,7 @@ async fn test_health_check() {
 #[actix_rt::test]
 async fn test_create_order_eth_to_btc() {
     // This is a mock test - in production you'd set up a test database
-    let order_request = json!({
+    let _order_request = json!({
         "direction": "ETH_TO_BTC",
         "bitcoin_amount": 100000,
         "bitcoin_address": "tb1qw508d6qejxtdg4y5r3zarvary0c5xw7kxpjzsx",
@@ -41,9 +41,10 @@ async fn test_create_order_eth_to_btc() {
 
 #[actix_rt::test]
 async fn test_htlc_script_generation() {
-    use bitcoin::{Network, PublicKey};
+    use bitcoin::{PublicKey};
     use std::str::FromStr;
-    use thunder_portal::services::htlc_builder::{HtlcBuilder, HtlcParams};
+    use thunder_portal::services::htlc_builder::HtlcBuilder;
+    use thunder_portal::models::htlc::HtlcParams;
 
     let recipient_pubkey = PublicKey::from_str(
         "03789ed0bb717d88f7d321a368d905e7430207ebbd82bd342cf11ae157a7ace5fd"
@@ -71,7 +72,7 @@ async fn test_htlc_script_generation() {
 }
 
 #[test]
-fn test_preimage_hash_generation() {
+async fn test_preimage_hash_generation() {
     use thunder_portal::services::htlc_builder::HtlcBuilder;
 
     let (preimage, payment_hash) = HtlcBuilder::generate_preimage();
@@ -86,7 +87,7 @@ fn test_preimage_hash_generation() {
 }
 
 #[test]
-fn test_hex_utilities() {
+async fn test_hex_utilities() {
     use thunder_portal::utils::{hex_to_bytes, bytes_to_hex};
 
     let original = b"Hello, Bitcoin!";
@@ -97,7 +98,7 @@ fn test_hex_utilities() {
 }
 
 #[test]
-fn test_address_validation() {
+async fn test_address_validation() {
     use thunder_portal::utils::{validate_bitcoin_address, validate_ethereum_address};
     use bitcoin::Network;
 
@@ -118,7 +119,7 @@ fn test_address_validation() {
 }
 
 #[test]
-fn test_sha256_hashing() {
+async fn test_sha256_hashing() {
     use thunder_portal::utils::sha256;
 
     let data = b"test data";

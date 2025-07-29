@@ -13,7 +13,7 @@ pub async fn create_order(
     state: web::Data<AppState>,
     req: web::Json<CreateOrderRequest>,
 ) -> Result<HttpResponse, ApiError> {
-    req.validate()?;
+    req.0.validate()?;
     let response = state.order_service.create_order(req.into_inner()).await?;
     Ok(HttpResponse::Created().json(response))
 }
@@ -31,7 +31,7 @@ pub async fn submit_fusion_proof(
     order_id: web::Path<uuid::Uuid>,
     req: web::Json<FusionProofRequest>,
 ) -> Result<HttpResponse, ApiError> {
-    req.validate()?;
+    req.0.validate()?;
     let response = state.order_service
         .submit_fusion_proof(order_id.into_inner(), req.into_inner())
         .await?;
@@ -42,7 +42,7 @@ pub async fn verify_htlc(
     _state: web::Data<AppState>,
     req: web::Json<VerifyHtlcRequest>,
 ) -> Result<HttpResponse, ApiError> {
-    req.validate()?;
+    req.0.validate()?;
     
     // TODO: Implement HTLC verification logic
     // For now, return a mock response
@@ -59,10 +59,10 @@ pub async fn verify_htlc(
 
 pub async fn claim_htlc(
     _state: web::Data<AppState>,
-    htlc_id: web::Path<uuid::Uuid>,
+    _htlc_id: web::Path<uuid::Uuid>,
     req: web::Json<ClaimRequest>,
 ) -> Result<HttpResponse, ApiError> {
-    req.validate()?;
+    req.0.validate()?;
     
     // TODO: Implement HTLC claiming logic
     // For now, return a mock response
