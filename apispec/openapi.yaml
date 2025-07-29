@@ -123,6 +123,31 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
+  /htlc/create:
+    post:
+      tags:
+        - HTLCs
+      summary: Create Bitcoin HTLC
+      description: |
+        Generate a Bitcoin HTLC script and P2SH address for atomic swaps.
+        Returns the redeem script and address to fund for creating an HTLC on-chain.
+      operationId: createHtlc
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateHtlcRequest'
+      responses:
+        '200':
+          description: HTLC created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateHtlcResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
   /htlc/verify:
     post:
       tags:
@@ -609,6 +634,65 @@ components:
             timeoutHeight:
               type: integer
               description: Absolute timeout block height
+
+    CreateHtlcRequest:
+      type: object
+      required:
+        - preimageHash
+        - userPublicKey
+        - timeoutBlocks
+      properties:
+        preimageHash:
+          type: string
+          description: SHA256 hash of the preimage (hex)
+          pattern: '^[a-fA-F0-9]{64}$'
+          example: "66687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925"
+        userPublicKey:
+          type: string
+          description: User's public key (hex)
+          pattern: '^[a-fA-F0-9]{66}$'
+          example: "0279BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F81798"
+        resolverPublicKey:
+          type: string
+          description: Resolver's public key (hex). If not provided, userPublicKey is used for both roles.
+          pattern: '^[a-fA-F0-9]{66}$'
+          example: "0279BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F81798"
+        timeoutBlocks:
+          type: integer
+          description: Number of blocks until timeout (typically 144 for ~24 hours)
+          minimum: 1
+          maximum: 2016
+          example: 144
+
+    CreateHtlcResponse:
+      type: object
+      required:
+        - htlcScript
+        - htlcAddress
+        - htlcScriptHash
+        - timeoutBlock
+        - estimatedTimeoutTimestamp
+      properties:
+        htlcScript:
+          type: string
+          description: HTLC redeem script (hex)
+          example: "63a820..."
+        htlcAddress:
+          type: string
+          description: Bitcoin P2SH address to send funds to
+          example: "2N8hwP1WmJrFF5QWABn38y63uYLhnJYJYTF"
+        htlcScriptHash:
+          type: string
+          description: Hash160 of the redeem script (hex)
+          example: "b7c4c7b600..."
+        timeoutBlock:
+          type: integer
+          description: Absolute block height when HTLC expires
+          example: 2500144
+        estimatedTimeoutTimestamp:
+          type: integer
+          format: int64
+          description: Estimated Unix timestamp when timeout occurs
 
     VerifyHtlcRequest:
       type: object

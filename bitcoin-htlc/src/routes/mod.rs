@@ -8,6 +8,7 @@ pub fn configure_routes() -> Scope {
         .route("/orders", web::post().to(handlers::create_order))
         .route("/orders/{order_id}", web::get().to(handlers::get_order))
         .route("/orders/{order_id}/fusion-proof", web::post().to(handlers::submit_fusion_proof))
+        .route("/htlc/create", web::post().to(handlers::create_htlc))
         .route("/htlc/verify", web::post().to(handlers::verify_htlc))
         .route("/htlc/{htlc_id}/claim", web::post().to(handlers::claim_htlc))
         .route("/htlc/{htlc_id}/refund", web::post().to(handlers::refund_htlc))

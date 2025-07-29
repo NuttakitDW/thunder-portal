@@ -49,10 +49,24 @@ echo "Order created successfully!"
 echo "Order ID: $ORDER_ID"
 echo "$ORDER_RESPONSE" | jq .
 
-# 3. Show HTLC details
-echo -e "\n${GREEN}3. HTLC Details${NC}"
-echo "================================"
-echo "HTLC Address: 2N8hwP1WmJrFF5QWABn38y63uYLhnJYJYTF"
+# 3. Create HTLC using new endpoint
+echo -e "\n${GREEN}3. Creating HTLC...${NC}"
+HTLC_RESPONSE=$(curl -s -X POST $API_URL/htlc/create \
+  -H "X-API-Key: $API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "preimage_hash": "66687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925",
+    "user_public_key": "0279BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F81798",
+    "timeout_blocks": 144
+  }')
+
+HTLC_ADDRESS=$(echo "$HTLC_RESPONSE" | jq -r '.htlc_address')
+HTLC_SCRIPT=$(echo "$HTLC_RESPONSE" | jq -r '.htlc_script')
+
+echo "HTLC created successfully!"
+echo "$HTLC_RESPONSE" | jq .
+echo ""
+echo "HTLC Address: $HTLC_ADDRESS"
 echo "Amount to send: 0.001 BTC (100,000 satoshis)"
 echo ""
 echo "Preimage (secret): 426c6f636b636861696e2069732061776573"
@@ -60,7 +74,7 @@ echo "Hash: 66687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925"
 echo ""
 echo -e "${YELLOW}Instructions:${NC}"
 echo "1. Open your testnet wallet (e.g., Electrum in testnet mode)"
-echo "2. Send exactly 0.001 BTC to: 2N8hwP1WmJrFF5QWABn38y63uYLhnJYJYTF"
+echo "2. Send exactly 0.001 BTC to: $HTLC_ADDRESS"
 echo "3. Copy the transaction ID"
 echo ""
 read -p "Press Enter after sending BTC to the HTLC address..."
@@ -82,14 +96,13 @@ echo "$TX_STATUS" | jq .
 
 # 6. Verify HTLC
 echo -e "\n${GREEN}6. Verifying HTLC...${NC}"
-HTLC_SCRIPT="63a82066687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925882103789ed0bb717d88f7d321a368d905e7430207ebbd82bd342cf11ae157a7ace5fdac6704c0d82400b1752103789ed0bb717d88f7d321a368d905e7430207ebbd82bd342cf11ae157a7ace5fdac68"
 
 VERIFY_RESPONSE=$(curl -s -X POST $API_URL/htlc/verify \
   -H "X-API-Key: $API_KEY" \
   -H "Content-Type: application/json" \
   -d "{
     \"orderId\": \"$ORDER_ID\",
-    \"htlcAddress\": \"2N8hwP1WmJrFF5QWABn38y63uYLhnJYJYTF\",
+    \"htlcAddress\": \"$HTLC_ADDRESS\",
     \"redeemScript\": \"$HTLC_SCRIPT\",
     \"fundingTxId\": \"$TX_ID\"
   }")
@@ -105,7 +118,7 @@ echo "$ORDER_STATUS" | jq .
 # 8. Show explorer links
 echo -e "\n${GREEN}8. View on Blockchain Explorer${NC}"
 echo "================================"
-echo "HTLC Address: https://blockstream.info/testnet/address/2N8hwP1WmJrFF5QWABn38y63uYLhnJYJYTF"
+echo "HTLC Address: https://blockstream.info/testnet/address/$HTLC_ADDRESS"
 echo "Transaction: https://blockstream.info/testnet/tx/$TX_ID"
 
 echo -e "\n${BLUE}✅ Demo Complete!${NC}"

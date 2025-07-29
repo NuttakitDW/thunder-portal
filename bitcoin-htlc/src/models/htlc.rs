@@ -2,6 +2,27 @@ use serde::{Deserialize, Serialize};
 use validator::Validate;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Validate)]
+pub struct CreateHtlcRequest {
+    #[validate(regex(path = "crate::utils::HASH_REGEX"))]
+    pub preimage_hash: String,
+    #[validate(regex(path = "crate::utils::PUBKEY_REGEX"))]
+    pub user_public_key: String,
+    #[validate(range(min = 1, max = 500000))]
+    pub timeout_blocks: u32,
+    #[validate(regex(path = "crate::utils::PUBKEY_REGEX"))]
+    pub resolver_public_key: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CreateHtlcResponse {
+    pub htlc_script: String,
+    pub htlc_address: String,
+    pub script_hash: String,
+    pub timeout_blocks: u32,
+    pub estimated_timeout_timestamp: u64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Validate)]
 pub struct VerifyHtlcRequest {
     pub transaction_hex: String,
     pub output_index: u32,

@@ -3,7 +3,7 @@ use std::fs;
 
 /// Serve the OpenAPI YAML spec
 pub async fn serve_openapi_spec() -> Result<HttpResponse> {
-    let spec_content = fs::read_to_string("../api/openapi.yaml")
+    let spec_content = fs::read_to_string("../apispec/openapi.yaml")
         .unwrap_or_else(|_| "OpenAPI spec not found".to_string());
     
     Ok(HttpResponse::Ok()
