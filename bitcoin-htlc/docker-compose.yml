@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  thunder-portal:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - HOST=0.0.0.0
+      - PORT=3000
+      - DATABASE_URL=sqlite:///app/data/thunder_portal.db
+      - BITCOIN_NETWORK=testnet
+      - BITCOIN_API_URL=https://blockstream.info/testnet/api
+      - RUST_LOG=info,thunder_portal=debug
+      # IMPORTANT: Set these in production!
+      - RESOLVER_PRIVATE_KEY=${RESOLVER_PRIVATE_KEY:-cVj5kRqzKy7rKxdaGw8EqYbL8Q5rFTPXLjQ6KZaKyWsyL2wkqJhH}
+      - RESOLVER_PUBLIC_KEY=${RESOLVER_PUBLIC_KEY:-03789ed0bb717d88f7d321a368d905e7430207ebbd82bd342cf11ae157a7ace5fd}
+      - API_KEY=${API_KEY:-your-secret-api-key-here}
+      - FUSION_RESOLVER_ADDRESS=${FUSION_RESOLVER_ADDRESS:-0x0000000000000000000000000000000000000000}
+    volumes:
+      - ./data:/app/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/v1/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s

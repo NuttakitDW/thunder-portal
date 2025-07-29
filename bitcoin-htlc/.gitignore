@@ -1,0 +1,43 @@
+# Rust
+/target/
+Cargo.lock
+**/*.rs.bk
+
+# Environment
+.env
+.env.local
+.env.production
+
+# Database
+*.db
+*.db-shm
+*.db-wal
+thunder_portal.db*
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Logs
+*.log
+
+# Test coverage
+tarpaulin-report.html
+cobertura.xml
+
+# Documentation
+/target/doc/
+
+# Backup files
+*.bak
+*.backup
+
+# Keys (NEVER commit private keys!)
+*.key
+*.pem
+private_key*
+secret_key*
