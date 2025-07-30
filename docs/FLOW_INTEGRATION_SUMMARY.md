@@ -8,63 +8,32 @@ Thunder Portal enables trustless atomic swaps between native Bitcoin and Ethereu
 
 ### ETH → BTC Swap Flow
 
-```
-┌─────────────┐                    ┌──────────────────┐                    ┌─────────────┐
-│    User     │                    │  Thunder Portal  │                    │   Bitcoin   │
-│  (has ETH)  │                    │    Resolver      │                    │   Network   │
-└──────┬──────┘                    └────────┬─────────┘                    └──────┬──────┘
-       │                                     │                                      │
-       │ 1. Create Fusion+ Order             │                                      │
-       │ "Swap my ETH for BTC"               │                                      │
-       ├────────────────────────────────────►│                                      │
-       │                                     │                                      │
-       │                                     │ 2. Lock BTC in HTLC                 │
-       │                                     │ (hash = H(secret))                  │
-       │                                     ├─────────────────────────────────────►│
-       │                                     │                                      │
-       │ 3. Order ready with HTLC address    │                                      │
-       │◄────────────────────────────────────┤                                      │
-       │                                     │                                      │
-       │ 4. Fill Fusion+ order               │                                      │
-       │ (ETH locked with same hash)         │                                      │
-       ├────────────────────────────────────►│                                      │
-       │                                     │                                      │
-       │ 5. Claim BTC with secret            │                                      │
-       ├─────────────────────────────────────┼─────────────────────────────────────►│
-       │                                     │                                      │
-       │                                     │ 6. Use revealed secret              │
-       │                                     │ to claim ETH from Fusion+          │
-       │                                     │◄─────────────────────────────────────┤
-       │                                     │                                      │
+```mermaid
+sequenceDiagram
+    User->>Resolver: 1. Create Fusion+ Order<br/>"Swap my ETH for BTC"
+    Resolver->>Bitcoin Network: 2. Lock BTC in HTLC<br/>(hash = H(secret))
+    Bitcoin Network-->>Resolver: 3. HTLC address
+    Resolver-->>User: 4. Order ready with HTLC address
+    User->>Resolver contract in ETH: 5. Fill Fusion+ order<br/>(ETH locked with same hash)
+    Resolver contract in ETH-->>User: 6. ETH escrowed successfully
+    User->>Bitcoin Network: 7. Claim BTC with secret
+    Bitcoin Network-->>User: 8. BTC transferred to user
 ```
 
 ### BTC → ETH Swap Flow
 
-```
-┌─────────────┐                    ┌──────────────────┐                    ┌─────────────┐
-│    User     │                    │  Thunder Portal  │                    │  Ethereum   │
-│  (has BTC)  │                    │    Resolver      │                    │   Network   │
-└──────┬──────┘                    └────────┬─────────┘                    └──────┬──────┘
-       │                                     │                                      │
-       │ 1. Create Bitcoin HTLC              │                                      │
-       │ (lock BTC with hash)                │                                      │
-       ├────────────────────────────────────►│                                      │
-       │                                     │                                      │
-       │                                     │ 2. Verify HTLC on Bitcoin           │
-       │                                     │ (check script & funding)           │
-       │                                     ├──────────────────────────────►      │
-       │                                     │                                      │
-       │                                     │ 3. Create matching Fusion+ fill     │
-       │                                     │ (ETH locked with same hash)        │
-       │                                     ├─────────────────────────────────────►│
-       │                                     │                                      │
-       │ 4. Claim ETH with secret            │                                      │
-       ├─────────────────────────────────────┼─────────────────────────────────────►│
-       │                                     │                                      │
-       │                                     │ 5. Use revealed secret              │
-       │                                     │ to claim BTC from HTLC             │
-       │◄────────────────────────────────────┼──────────────────────────────►      │
-       │                                     │                                      │
+```mermaid
+sequenceDiagram
+    User->>Bitcoin Network: 1. Create Bitcoin HTLC<br/>(lock BTC with hash)
+    Bitcoin Network-->>User: 2. HTLC address & script
+    User->>Resolver: 3. Submit HTLC details<br/>for verification
+    Resolver->>Bitcoin Network: 4. Verify HTLC on Bitcoin<br/>(check script & funding)
+    Bitcoin Network-->>Resolver: 5. HTLC verified
+    Resolver->>Resolver contract in ETH: 6. Create matching Fusion+ fill<br/>(ETH locked with same hash)
+    Resolver contract in ETH-->>Resolver: 7. ETH escrowed successfully
+    Resolver-->>User: 8. Order ready for claiming
+    User->>Resolver contract in ETH: 9. Claim ETH with secret
+    Resolver contract in ETH-->>User: 10. ETH transferred to user
 ```
 
 ## 🏗️ Key Components
