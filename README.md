@@ -24,14 +24,14 @@ graph TB
         Taker[Taker/Resolver]
     end
     
-    subgraph "1inch Fusion+ Protocol"
-        UI[1inch Interface]
-        FP[Fusion+ Protocol]
+    subgraph "Thunder Portal Fork"
+        TUI[Thunder Portal UI<br/>BTC Support Added]
+        TFP[Forked Fusion+ Protocol<br/>Extended for Bitcoin]
         OC[Order Chunking<br/>100 chunks]
-        OM[Order Matching]
+        OM[Order Matching Engine]
     end
     
-    subgraph "Thunder Portal System"
+    subgraph "Thunder Portal Backend"
         TPR[Thunder Portal<br/>Resolver]
         HTLC[Rust HTLC Service]
         PM[Presign Manager]
@@ -41,7 +41,7 @@ graph TB
     subgraph "Blockchain Layer"
         subgraph "Ethereum"
             ESC[Escrow Contract<br/>EscrowSrc/Dst]
-            SC[Settlement Contract]
+            SC[1inch Settlement]
         end
         subgraph "Bitcoin"
             BTC[Bitcoin Network]
@@ -49,9 +49,9 @@ graph TB
         end
     end
     
-    Maker -->|Create Intent| UI
-    UI -->|Submit Order| FP
-    FP -->|Break into chunks| OC
+    Maker -->|Create BTC Intent| TUI
+    TUI -->|Submit Order| TFP
+    TFP -->|Break into chunks| OC
     OC -->|Partial Orders| OM
     OM -->|Matched Orders| TPR
     
@@ -65,6 +65,7 @@ graph TB
     ESC <--> SC
     HTLC <--> BTC
     
+    style TFP fill:#f9f,stroke:#333,stroke-width:4px
     style OC fill:#f9f,stroke:#333,stroke-width:4px
     style PM fill:#f9f,stroke:#333,stroke-width:4px
 ```
@@ -103,19 +104,27 @@ flowchart LR
 
 ### Core Components Explained
 
-1. **Order Chunking System**
+1. **Forked 1inch Fusion+ Protocol**
+   - **Why Fork?**: Current Fusion+ doesn't support Bitcoin orders
+   - **Key Extensions**:
+     - Added Bitcoin as supported asset type
+     - Extended order structure for BTC addresses
+     - Modified matching engine for cross-chain orders
+     - Integrated HTLC verification requirements
+
+2. **Order Chunking System**
    - Breaks large orders into 100 equal chunks
    - Enables partial fulfillment by multiple resolvers
    - Each chunk can be independently matched and settled
    - Example: 1 BTC order → 100 chunks of 0.01 BTC each
 
-2. **Dual Escrow System**
+3. **Dual Escrow System**
    - **Ethereum Side**: Uses 1inch EscrowSrc/EscrowDst contracts
    - **Bitcoin Side**: Creates HTLCs with presigned transactions
    - Both escrows use the same cryptographic hash
    - Atomic execution guaranteed by shared secret
 
-3. **Presigned Transaction Model**
+4. **Presigned Transaction Model**
    - Borrowed from Bitcoin Lightning Network concepts
    - Creates refund transactions signed before funding
    - Enables trustless timeout guarantees
@@ -124,13 +133,13 @@ flowchart LR
      - Claim transaction (presigned, reveals secret)
      - Refund transaction (presigned, time-locked)
 
-4. **Thunder Portal Resolver**
-   - Monitors chunked orders from 1inch
+5. **Thunder Portal Resolver**
+   - Monitors chunked orders from forked protocol
    - Manages presigned transaction creation
    - Coordinates dual escrow deployment
    - Handles partial order fulfillment
 
-5. **Rust HTLC Service**
+6. **Rust HTLC Service**
    - Generates Bitcoin scripts and addresses
    - Creates presigned transactions
    - Manages UTXO selection and fee calculation
@@ -138,31 +147,32 @@ flowchart LR
 
 ## 🔄 How It Works
 
-### ETH → BTC Swap (with Chunking & Dual Escrow)
+### ETH → BTC Swap (with Forked Protocol)
 
 ```mermaid
 sequenceDiagram
     participant Maker
-    participant 1inch
-    participant Protocol
+    participant ThunderUI as Thunder Portal UI
+    participant ForkedProtocol as Forked Fusion+
     participant Resolver
     participant Ethereum
     participant Bitcoin
 
-    Maker->>1inch: Create intent (1 ETH → 0.05 BTC)
-    1inch->>Protocol: Process order
-    Protocol->>Protocol: Split into 100 chunks
-    Note over Protocol: Each chunk: 0.01 ETH → 0.0005 BTC
+    Maker->>ThunderUI: Create intent (1 ETH → 0.05 BTC)
+    Note over ThunderUI: Bitcoin address support added
+    ThunderUI->>ForkedProtocol: Process BTC order
+    ForkedProtocol->>ForkedProtocol: Split into 100 chunks
+    Note over ForkedProtocol: Each chunk: 0.01 ETH → 0.0005 BTC
     
-    Protocol->>Resolver: Broadcast chunked orders
+    ForkedProtocol->>Resolver: Broadcast chunked orders
     Note over Resolver: Dutch auction for chunks
     
     Resolver->>Ethereum: Create EscrowSrc (ETH locked)
     Resolver->>Bitcoin: Create presigned HTLC
     Note over Bitcoin: Funding TX + Presigned Claim/Refund
     
-    Resolver->>Protocol: Fill chunks with proof
-    Protocol->>Maker: Chunks matched notification
+    Resolver->>ForkedProtocol: Fill chunks with proof
+    ForkedProtocol->>Maker: Chunks matched notification
     
     Maker->>Bitcoin: Claim BTC (reveal secret)
     Resolver->>Ethereum: Claim ETH (use secret)
@@ -272,10 +282,32 @@ timeline
 - Comprehensive test suite
 - Full API documentation
 
+### 🔧 Fork Requirements
+To support Bitcoin in 1inch Fusion+, we need to:
+
+1. **Protocol Extensions**
+   - Add `BTC` as valid asset type
+   - Extend order structure with Bitcoin address fields
+   - Add HTLC hash field to order metadata
+   - Modify validation to accept Bitcoin addresses
+
+2. **UI Modifications**
+   - Add Bitcoin wallet connection
+   - Support Bitcoin address input/validation
+   - Display BTC balances and rates
+   - Show HTLC status tracking
+
+3. **Matching Engine Updates**
+   - Recognize cross-chain order pairs
+   - Validate HTLC requirements
+   - Track presigned transaction status
+   - Handle longer settlement times
+
 ### 🚧 Next Steps
+- Fork and extend 1inch Fusion+ protocol
+- Implement Bitcoin support in UI
 - Live Bitcoin network integration
-- Production Fusion+ testing
-- Transaction monitoring
+- Production testing with forked protocol
 - Mainnet deployment
 
 ## 🏃 Quick Start
@@ -351,9 +383,15 @@ graph LR
 - **Bitcoin Limitation**: Bitcoin script can't directly interact with Ethereum
 - **Lightning Inspiration**: Proven model from Lightning Network
 
+### Why Fork 1inch Fusion+?
+- **No Native Bitcoin Support**: Current protocol only handles EVM chains
+- **Address Format**: Bitcoin addresses need special handling
+- **Settlement Time**: Bitcoin's longer confirmation times need accommodation
+- **HTLC Integration**: Protocol must understand cross-chain atomic swaps
+
 ### Order Chunking Details
 - **Fixed at 100**: Every order splits into exactly 100 chunks
-- **Protocol Level**: Handled by 1inch Fusion+, not Thunder Portal
+- **Protocol Level**: Handled by forked Fusion+ protocol
 - **Flexible Fulfillment**: Resolvers can take 1-100 chunks based on liquidity
 
 ### Maker vs Resolver Roles
