@@ -1,0 +1,30 @@
+services:
+  # Bitcoin Core in regtest mode
+  bitcoin-regtest:
+    image: ruimarinho/bitcoin-core:latest
+    container_name: thunder-bitcoin-regtest
+    environment:
+      BITCOIN_RPC_USER: thunderportal
+      BITCOIN_RPC_PASSWORD: thunderportal123
+    command:
+      - -regtest
+      - -server
+      - -rpcuser=thunderportal
+      - -rpcpassword=thunderportal123
+      - -rpcallowip=0.0.0.0/0
+      - -rpcbind=0.0.0.0
+      - -rpcport=18443
+      - -fallbackfee=0.00001
+      - -txindex
+      - -deprecatedrpc=create_bdb
+    ports:
+      - "18443:18443"  # RPC port for regtest
+      - "18444:18444"  # P2P port for regtest
+    volumes:
+      - ./data/bitcoin:/home/bitcoin/.bitcoin
+    networks:
+      - thunder-network
+
+networks:
+  thunder-network:
+    driver: bridge

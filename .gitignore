@@ -49,4 +49,26 @@ debug/
 *.seed
 *.pid.lock
 
+# Local development files created by npm start
+.hardhat.pid
+logs/
+data/
+cache/
+artifacts/
+
+# Hardhat
+typechain/
+typechain-types/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+thunder_portal_local.db
+
+# Docker volumes
+data/bitcoin/
+data/ethereum/
+data/postgres/
+
 .claude

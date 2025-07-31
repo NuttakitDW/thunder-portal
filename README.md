@@ -325,24 +325,127 @@ To support Bitcoin in 1inch Fusion+, we need to:
 
 ## 🏃 Quick Start
 
+### Prerequisites
+- Docker & Docker Compose
+- Node.js (v18+) & npm
+- Rust & Cargo
+
+### Local Development Setup
+
 ```bash
-# Clone repository
+# 1. Clone repository
 git clone https://github.com/your-org/thunder-portal
 cd thunder-portal
 
-# Start HTLC service
-cd rust-backend
-cargo run --release
-
-# In another terminal, start resolver
-cd ../typescript-resolver
+# 2. Install dependencies
 npm install
+
+# 3. Start development environment
 npm start
+
+# 4. Test the environment
+npm run test:env
 ```
 
-### Docker
+### What's Running
+
+#### Ethereum (via Hardhat Fork)
+- Forks Ethereum mainnet at block 19,000,000
+- Pre-funded test accounts with 10,000 ETH each
+- RPC endpoint: `http://localhost:8545`
+
+#### Bitcoin (Regtest Network)
+- Local Bitcoin node in regtest mode
+- Pre-generated blocks and funded test wallet
+- RPC endpoint: `http://localhost:18443`
+- Credentials: `thunderportal / thunderportal123`
+
+### Test Accounts
+
+#### Ethereum Accounts
+All accounts are pre-funded with 10,000 ETH:
+
+| Role     | Address                                      | Private Key                                                        |
+|----------|----------------------------------------------|-------------------------------------------------------------------|
+| Owner    | `0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266` | `0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80` |
+| User     | `0x70997970C51812dc3A010C7d01b50e0d17dc79C8` | `0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d` |
+| Resolver | `0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC` | `0x5de4111afa1a4b94908f83103eb1f1706367c2e68ca870fc3fb9a804cdab365a` |
+
+#### Bitcoin Test Account
+- Private Key: `cVj5kMEHS9hSCwNvSjAqaf3x4HmgDMYu3yqeRCaWHYuBBFqhJzxs`
+- Funded with ~50 BTC (regtest)
+
+### Available Commands
+
 ```bash
-docker-compose up -d
+# Start environment
+npm start
+
+# Stop environment
+npm stop
+
+# Test connections
+npm run test:env
+
+# Clean everything (remove all data)
+npm run clean
+
+# Compile contracts
+npm run compile
+
+# Deploy contracts locally
+npm run deploy:local
+```
+
+### Manual Operations
+
+#### Bitcoin CLI Commands
+```bash
+# Check balance
+docker exec thunder-bitcoin-regtest bitcoin-cli -regtest getbalance
+
+# Generate blocks
+docker exec thunder-bitcoin-regtest bitcoin-cli -regtest generatetoaddress 1 $(docker exec thunder-bitcoin-regtest bitcoin-cli -regtest getnewaddress)
+
+# Get block info
+docker exec thunder-bitcoin-regtest bitcoin-cli -regtest getblockcount
+```
+
+#### Ethereum Commands (via Hardhat console)
+```bash
+# Open Hardhat console
+npx hardhat console --network localhost
+
+# In console:
+const [owner, user, resolver] = await ethers.getSigners()
+await owner.getBalance()
+```
+
+### Troubleshooting
+
+#### Port Already in Use
+If you see "Port 8545 is already in use":
+```bash
+# Find and kill the process
+lsof -ti:8545 | xargs kill -9
+```
+
+#### Bitcoin Connection Failed
+Make sure Docker is running:
+```bash
+docker ps
+```
+
+#### Hardhat Fork Issues
+Check the logs:
+```bash
+tail -f logs/hardhat.log
+```
+
+#### Reset Everything
+```bash
+npm run clean
+npm start
 ```
 
 ## 🎯 Key Features

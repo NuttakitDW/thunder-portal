@@ -1,0 +1,23 @@
+{
+  "name": "thunder-portal",
+  "version": "1.0.0",
+  "description": "Thunder Portal - Bitcoin ⚡ Ethereum Atomic Swaps",
+  "scripts": {
+    "start": "./scripts/start-dev.sh",
+    "stop": "./scripts/stop-dev.sh",
+    "test:env": "node scripts/test-local-env.js",
+    "clean": "./scripts/clean-all.sh",
+    "clean:quick": "docker-compose down && rm -rf logs .hardhat.pid",
+    "compile": "hardhat compile",
+    "deploy:local": "hardhat run scripts/deploy.js --network localhost"
+  },
+  "dependencies": {
+    "axios": "^1.6.0",
+    "dotenv": "^16.3.1",
+    "ethers": "^6.9.0"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^4.0.0",
+    "hardhat": "^2.19.0"
+  }
+}
