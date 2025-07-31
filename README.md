@@ -119,10 +119,11 @@ flowchart LR
    - Example: 1 BTC order → 100 chunks of 0.01 BTC each
 
 3. **Dual Escrow System**
-   - **Ethereum Side**: Uses 1inch EscrowSrc/EscrowDst contracts
+   - **Ethereum Side**: Deploys new EscrowSrc/EscrowDst proxy for each order
    - **Bitcoin Side**: Creates HTLCs with presigned transactions
    - Both escrows use the same cryptographic hash
    - Atomic execution guaranteed by shared secret
+   - **Per-Order Isolation**: Each swap gets dedicated escrow contracts
 
 4. **Presigned Transaction Model**
    - Borrowed from Bitcoin Lightning Network concepts
@@ -167,7 +168,8 @@ sequenceDiagram
     ForkedProtocol->>Resolver: Broadcast chunked orders
     Note over Resolver: Dutch auction for chunks
     
-    Resolver->>Ethereum: Create EscrowSrc (ETH locked)
+    Resolver->>Ethereum: Deploy EscrowSrc proxy (ETH locked)
+    Note over Ethereum: New proxy for this order via Factory
     Resolver->>Bitcoin: Create presigned HTLC
     Note over Bitcoin: Funding TX + Presigned Claim/Refund
     
@@ -377,6 +379,13 @@ graph LR
 1. **Same Hash, Two Chains**: Both Ethereum escrow and Bitcoin HTLC use identical hash
 2. **Atomic Guarantee**: Revealing secret on one chain enables claim on the other
 3. **No Double Spend**: Mathematical impossibility to claim one without enabling the other
+
+### Escrow Contract Deployment
+- **Not Reused**: Each order deploys new escrow proxy contracts
+- **Gas Efficient**: Uses OpenZeppelin Clones (minimal proxy pattern)
+- **Deterministic Addresses**: CREATE2 ensures predictable contract addresses
+- **Implementation Pattern**: Shared logic contract, unique proxy per order
+- **Security**: Complete isolation between different swaps
 
 ### Why Presigned Transactions?
 - **Trust Minimization**: Refund guaranteed even if resolver disappears
