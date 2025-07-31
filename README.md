@@ -112,11 +112,20 @@ flowchart LR
      - Modified matching engine for cross-chain orders
      - Integrated HTLC verification requirements
 
-2. **Order Chunking System**
+2. **Order Chunking System with Merkle Trees**
    - Breaks large orders into 100 equal chunks
    - Enables partial fulfillment by multiple resolvers
    - Each chunk can be independently matched and settled
    - Example: 1 BTC order → 100 chunks of 0.01 BTC each
+   
+   **Merkle Tree Implementation**:
+   - **101 Secrets Generated**: For 100 chunks, 101 secrets are created
+     - Secrets 0-99: For partial fills (1% each)
+     - Secret 100: Special secret for complete fill (100% at once)
+   - **Merkle Leaves**: Each leaf = `keccak256(index, hashedSecret)`
+   - **Merkle Root**: Embedded in order's `hashlockInfo` field
+   - **Progressive Filling**: Secrets must be revealed in order based on fill percentage
+   - **No Reuse**: Each secret can only be used once via `MerkleStorageInvalidator`
 
 3. **Dual Escrow System**
    - **Ethereum Side**: Deploys new EscrowSrc/EscrowDst proxy for each order
@@ -342,29 +351,74 @@ docker-compose up -d
 - **Multi-Language**: TypeScript for business logic, Rust for Bitcoin
 - **Production Ready**: Complete implementation with tests
 
-### 💡 Key Innovation: Order Chunking for Partial Fulfillment
+### 💡 Key Innovation: Merkle Tree-Based Partial Fulfillment
 
 ```mermaid
-graph LR
-    subgraph "Traditional Swaps"
-        TO[1 BTC Order] -->|All or Nothing| TF[Single Fill]
+graph TB
+    subgraph "Order Creation"
+        O[1 BTC Order] --> S[Generate 101 Secrets]
+        S --> MT[Build Merkle Tree]
+        MT --> MR[Merkle Root in Order]
     end
     
-    subgraph "Thunder Portal Innovation"
-        O[1 BTC Order] -->|Protocol Chunks| C[100 x 0.01 BTC]
-        C -->|Resolver 1| P1[25 chunks]
-        C -->|Resolver 2| P2[50 chunks]
-        C -->|Resolver 3| P3[25 chunks]
+    subgraph "Merkle Tree Structure"
+        MR --> L1[Leaf 0: hash(0, secret0)]
+        MR --> L2[Leaf 1: hash(1, secret1)]
+        MR --> L3[...]
+        MR --> L100[Leaf 100: hash(100, secret100)]
     end
     
-    style C fill:#f9f,stroke:#333,stroke-width:4px
+    subgraph "Partial Fills"
+        L1 -->|1% fill| R1[Resolver 1]
+        L2 -->|1% fill| R1
+        L3 -->|...| R2[Resolver 2]
+        L100 -->|Final chunk| R3[Resolver 3]
+    end
+    
+    style MT fill:#f9f,stroke:#333,stroke-width:4px
+    style MR fill:#9f9,stroke:#333,stroke-width:4px
 ```
 
-**Benefits of Chunking:**
-- **Better Liquidity**: Multiple resolvers can fill one order
-- **Risk Distribution**: Resolvers can participate with smaller capital
-- **Improved Execution**: Partial fills ensure better price discovery
-- **User Experience**: Orders execute even with fragmented liquidity
+**How Merkle Trees Enable Chunking:**
+
+1. **Secret Generation**:
+   ```solidity
+   // For 100 chunks, generate 101 secrets
+   bytes32[] secrets = new bytes32[](101);
+   for (uint i = 0; i < 101; i++) {
+       secrets[i] = keccak256(randomBytes);
+   }
+   ```
+
+2. **Merkle Tree Construction**:
+   ```solidity
+   // Create merkle leaves
+   bytes32[] leaves = new bytes32[](101);
+   for (uint i = 0; i < 101; i++) {
+       leaves[i] = keccak256(abi.encodePacked(i, hash(secrets[i])));
+   }
+   // Build tree and get root
+   bytes32 merkleRoot = buildMerkleTree(leaves);
+   ```
+
+3. **Progressive Revelation**:
+   - Resolver filling 1-25%: Must reveal secrets 0-24
+   - Resolver filling 26-50%: Must reveal secrets 25-49
+   - Resolver filling 100% at once: Uses secret 100 (special complete fill)
+   - Each secret can only be used once
+   - MerkleStorageInvalidator tracks used indices
+
+4. **Security Properties**:
+   - **Atomic per Chunk**: Each 1% chunk is atomic
+   - **No Front-Running**: Secrets must match merkle proof
+   - **Progressive Execution**: Can't skip ahead in sequence
+   - **Double-Spend Prevention**: Each index used only once
+
+**Benefits of Merkle-Based Chunking:**
+- **Cryptographic Security**: Verifiable partial execution
+- **Capital Efficiency**: Resolvers can fill exact amounts
+- **Parallel Execution**: Multiple resolvers simultaneously
+- **Gas Optimization**: Only verify used branches
 
 ## 🔮 Future Enhancements
 
@@ -398,10 +452,20 @@ graph LR
 - **Settlement Time**: Bitcoin's longer confirmation times need accommodation
 - **HTLC Integration**: Protocol must understand cross-chain atomic swaps
 
-### Order Chunking Details
+### Order Chunking & Merkle Tree Details
 - **Fixed at 100**: Every order splits into exactly 100 chunks
+- **101 Secrets**: 
+  - Secrets 0-99: For partial fills (1% increments)
+  - Secret 100: Special secret for complete fill (100% at once)
+- **Merkle Root**: Embedded in order, verifies all partial fills
+- **Progressive Indices**: Secrets revealed based on cumulative fill %
+- **Complete Fill Optimization**: Resolver can use secret 100 to fill entire order
 - **Protocol Level**: Handled by forked Fusion+ protocol
-- **Flexible Fulfillment**: Resolvers can take 1-100 chunks based on liquidity
+- **Flexible Fulfillment**: Resolvers can take 1-100 chunks or complete fill
+- **Index Calculation**: 
+  - Partial: `idx = 100 * (cumulativeFill - 1) / totalAmount`
+  - Complete: `idx = 100` (uses special secret)
+- **Security**: MerkleStorageInvalidator prevents secret reuse
 
 ### Maker vs Resolver Roles
 - **Makers**: Create intents, don't need to run infrastructure
