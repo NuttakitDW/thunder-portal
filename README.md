@@ -221,6 +221,29 @@ sequenceDiagram
 
 ## 🛠️ Technical Details
 
+### Extended Order Structure for Cross-Chain Swaps
+
+Thunder Portal extends the standard 1inch Fusion+ order structure to support Bitcoin addresses and cross-chain HTLC parameters:
+
+```solidity
+struct CrossChainOrderData {
+    // Standard 1inch Order fields
+    IOrderMixin.Order baseOrder;
+    
+    // Cross-chain extensions
+    string btcAddress;           // Bitcoin address (segwit/legacy/P2SH)
+    bytes32 htlcHashlock;       // Hash for both HTLCs
+    uint256 htlcTimeout;        // Bitcoin timeout (must be > Ethereum timeout)
+    uint256 minConfirmations;   // Required Bitcoin confirmations
+}
+```
+
+**Key Features:**
+- **Bitcoin Address Support**: Validates legacy (1...), P2SH (3...), and Segwit (bc1...) addresses
+- **Unified Hashlock**: Same hash used for both Bitcoin and Ethereum HTLCs
+- **Timeout Hierarchy**: Enforces Bitcoin timeout > Ethereum timeout for safety
+- **Confirmation Requirements**: Configurable Bitcoin confirmation threshold
+
 ### Bitcoin HTLC Structure
 ```bitcoin
 IF

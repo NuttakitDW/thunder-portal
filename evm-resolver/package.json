@@ -4,6 +4,8 @@
   "description": "Example of 1inch cross chain resolver",
   "scripts": {
     "test": "forge build && node --experimental-vm-modules ./node_modules/jest/bin/jest.js",
+    "test:crosschain": "/Users/nuttakit/.foundry/bin/forge test --match-contract CrossChainOrderTest -vvv",
+    "build": "/Users/nuttakit/.foundry/bin/forge build",
     "lint": "eslint  \"tests/**/*.ts\"",
     "main": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js tests/main.spec.ts",
     "fill": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js tests/fills",
