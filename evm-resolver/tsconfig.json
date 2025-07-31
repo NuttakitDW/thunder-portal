@@ -1,0 +1,11 @@
+{
+  "compilerOptions": {
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "moduleDetection": "auto",
+    "outDir": "./dist",
+    "lib": ["ESNext"],
+    "target": "ES2023",
+    "removeComments": false
+  }
+}
