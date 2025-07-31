@@ -128,9 +128,11 @@ flowchart LR
    - **No Reuse**: Each secret can only be used once via `MerkleStorageInvalidator`
 
 3. **Dual Escrow System**
-   - **Ethereum Side**: Deploys new EscrowSrc/EscrowDst proxy for each order
+   - **Ethereum Side**: Deploys ONE EscrowSrc/EscrowDst proxy per order
+     - Single escrow manages all 100 chunks
+     - Merkle root stored in escrow validates each partial fill
    - **Bitcoin Side**: Creates HTLCs with presigned transactions
-   - Both escrows use the same cryptographic hash
+   - Both escrows use the same cryptographic hash (merkle root)
    - Atomic execution guaranteed by shared secret
    - **Per-Order Isolation**: Each swap gets dedicated escrow contracts
 
@@ -435,8 +437,10 @@ graph TB
 3. **No Double Spend**: Mathematical impossibility to claim one without enabling the other
 
 ### Escrow Contract Deployment
+- **One Escrow Per Order**: A single escrow handles all 100 chunks via merkle tree
 - **Not Reused**: Each order deploys new escrow proxy contracts
 - **Gas Efficient**: Uses OpenZeppelin Clones (minimal proxy pattern)
+- **Chunk Management**: Merkle tree in escrow validates each partial fill
 - **Deterministic Addresses**: CREATE2 ensures predictable contract addresses
 - **Implementation Pattern**: Shared logic contract, unique proxy per order
 - **Security**: Complete isolation between different swaps
