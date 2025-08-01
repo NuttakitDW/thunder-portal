@@ -1,15 +1,20 @@
 const express = require('express');
 const axios = require('axios');
 const { ethers } = require('ethers');
+const crypto = require('crypto');
 
-// Import merkle demo functions
+// Import services
 const merkleDemo = require('./merkle-demo');
+const BitcoinService = require('./bitcoin-service');
 
 // Configuration
 const BITCOIN_API = 'http://localhost:3000/v1';
 const RELAYER_API = 'http://localhost:3001';
 const ETHEREUM_RPC = 'http://localhost:8545';
 const PORT = 3002;
+
+// Services
+const bitcoinService = new BitcoinService();
 
 // Ethereum setup
 const provider = new ethers.JsonRpcProvider(ETHEREUM_RPC);
@@ -132,6 +137,170 @@ app.get('/escrow-status/:escrowAddress', async (req, res) => {
   }
 });
 
+// Execute real atomic swap with actual blockchain transactions
+app.post('/execute-real-swap', async (req, res) => {
+  const { orderId, bitcoinAmount, ethereumAmount, userAddress } = req.body;
+  
+  console.log(`[RESOLVER] Starting REAL atomic swap for order ${orderId}`);
+  
+  try {
+    // Step 1: Generate real preimage and hash
+    console.log('[RESOLVER] Step 1: Generating cryptographic preimage...');
+    const preimage = crypto.randomBytes(32);
+    const preimageHex = preimage.toString('hex');
+    const preimageHash = crypto.createHash('sha256').update(preimage).digest('hex');
+    
+    console.log(`[RESOLVER] Preimage: ${preimageHex}`);
+    console.log(`[RESOLVER] Hash: ${preimageHash}`);
+    
+    // Step 2: Create real Bitcoin HTLC
+    console.log('[RESOLVER] Step 2: Creating real Bitcoin HTLC...');
+    const htlcResponse = await bitcoinService.createHTLC(
+      preimageHash,
+      "0279BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F81798", // Test public key
+      144 // 24 hour timeout
+    );
+    
+    const htlcAddress = htlcResponse.htlc_address;
+    console.log(`[RESOLVER] Real Bitcoin HTLC created at: ${htlcAddress}`);
+    
+    // Step 3: Fund the Bitcoin HTLC with actual Bitcoin
+    console.log('[RESOLVER] Step 3: Funding Bitcoin HTLC with real Bitcoin...');
+    const fundingResult = await bitcoinService.fundHTLC(htlcAddress, bitcoinAmount);
+    console.log(`[RESOLVER] Bitcoin HTLC funded with txid: ${fundingResult.txid}`);
+    
+    // Step 4: Register with relayer for Ethereum escrow creation
+    console.log('[RESOLVER] Step 4: Registering with relayer...');
+    const orderHash = ethers.keccak256(ethers.toUtf8Bytes(orderId));
+    const preimageBytes32 = '0x' + preimageHash;
+    
+    await axios.post(`${RELAYER_API}/monitor-swap`, {
+      orderId,
+      orderHash,
+      htlcAddress,
+      maker: resolver.address,
+      receiver: userAddress || "0x70997970C51812dc3A010C7d01b50e0d17dc79C8",
+      htlcHashlock: preimageBytes32,
+      htlcTimeout: Math.floor(Date.now() / 1000) + 3600,
+      bitcoinTxid: fundingResult.txid
+    });
+    
+    // Step 5: Wait for Bitcoin confirmation and Ethereum escrow creation
+    console.log('[RESOLVER] Step 5: Waiting for Bitcoin confirmation...');
+    await bitcoinService.waitForConfirmations(fundingResult.txid, 1);
+    
+    console.log('[RESOLVER] Step 6: Waiting for Ethereum escrow creation...');
+    let escrowAddress = null;
+    for (let i = 0; i < 12; i++) { // Wait up to 60 seconds
+      await new Promise(resolve => setTimeout(resolve, 5000));
+      try {
+        const statusResponse = await axios.get(`${RELAYER_API}/swap-status/${orderId}`);
+        if (statusResponse.data.escrowAddress) {
+          escrowAddress = statusResponse.data.escrowAddress;
+          break;
+        }
+      } catch (error) {
+        console.log('[RESOLVER] Still waiting for escrow creation...');
+      }
+    }
+    
+    if (!escrowAddress) {
+      throw new Error('Ethereum escrow was not created within timeout');
+    }
+    
+    console.log(`[RESOLVER] Ethereum escrow created at: ${escrowAddress}`);
+    
+    // Step 7: Fund the Ethereum escrow with real ETH
+    console.log('[RESOLVER] Step 7: Funding Ethereum escrow with real ETH...');
+    const escrow = new ethers.Contract(escrowAddress, ESCROW_ABI, resolver);
+    const fundTx = await escrow.createHTLC({ 
+      value: ethers.parseEther(ethereumAmount.toString()),
+      gasLimit: 300000
+    });
+    await fundTx.wait();
+    console.log(`[RESOLVER] Ethereum escrow funded with txid: ${fundTx.hash}`);
+    
+    // Step 8: Simulate user claiming (in real scenario, user would do this)
+    console.log('[RESOLVER] Step 8: Demonstrating claim process...');
+    await new Promise(resolve => setTimeout(resolve, 2000)); // Brief pause
+    
+    // User claims Ethereum side first
+    const claimTx = await escrow.claimHTLC(preimageBytes32, { gasLimit: 200000 });
+    await claimTx.wait();
+    console.log(`[RESOLVER] Ethereum HTLC claimed with txid: ${claimTx.hash}`);
+    
+    // Now resolver can claim Bitcoin side (preimage is revealed)
+    console.log('[RESOLVER] Step 9: Claiming Bitcoin HTLC...');
+    const bitcoinClaimResult = await bitcoinService.claimHTLC(orderId, preimageHex);
+    
+    // Generate a block to confirm Bitcoin claim
+    const newAddress = await bitcoinService.getNewAddress('mining');
+    await bitcoinService.generateBlocks(1, newAddress);
+    
+    res.json({
+      message: 'REAL atomic swap completed successfully!',
+      orderId,
+      preimage: preimageHex,
+      preimageHash,
+      bitcoin: {
+        htlcAddress,
+        fundingTxid: fundingResult.txid,
+        claimResult: bitcoinClaimResult
+      },
+      ethereum: {
+        escrowAddress,
+        fundingTxid: fundTx.hash,
+        claimTxid: claimTx.hash
+      },
+      status: 'COMPLETED',
+      note: 'This was a complete atomic swap using real blockchain transactions!'
+    });
+    
+  } catch (error) {
+    console.error('[RESOLVER] Error in real atomic swap:', error);
+    res.status(500).json({ 
+      error: 'Real atomic swap failed',
+      details: error.message,
+      orderId
+    });
+  }
+});
+
+// Get real Bitcoin blockchain status
+app.get('/bitcoin-status', async (req, res) => {
+  try {
+    const blockHeight = await bitcoinService.getBlockHeight();
+    const balance = await bitcoinService.getBalance();
+    
+    res.json({
+      blockHeight,
+      balance,
+      network: 'regtest',
+      rpcUrl: bitcoinService.rpcUrl
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to get Bitcoin status', details: error.message });
+  }
+});
+
+// Fund Bitcoin wallet (regtest only)
+app.post('/bitcoin-fund', async (req, res) => {
+  try {
+    const newAddress = await bitcoinService.getNewAddress('funding');
+    const blockHashes = await bitcoinService.generateBlocks(10, newAddress);
+    const balance = await bitcoinService.getBalance();
+    
+    res.json({
+      message: 'Bitcoin wallet funded',
+      address: newAddress,
+      blocksGenerated: blockHashes.length,
+      newBalance: balance
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fund Bitcoin wallet', details: error.message });
+  }
+});
+
 // Simulate complete atomic swap flow
 app.post('/demo-atomic-swap', async (req, res) => {
   const { orderId, bitcoinAmount, ethereumAmount } = req.body;
@@ -148,8 +317,11 @@ app.post('/demo-atomic-swap', async (req, res) => {
     
     // Step 2: Create Bitcoin HTLC with merkle root
     console.log('[RESOLVER] Step 2: Creating Bitcoin HTLC...');
+    // Ensure we have a valid hash (use first 32 bytes of merkle root)
+    const preimageHash = root.toString('hex').substring(0, 64) || "66687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925";
+    
     const htlcResponse = await axios.post(`${BITCOIN_API}/htlc/create`, {
-      preimage_hash: root.toString('hex').substring(0, 64), // Use merkle root as hash
+      preimage_hash: preimageHash,
       user_public_key: "0279BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F81798",
       timeout_blocks: 144
     }, {
@@ -189,24 +361,42 @@ app.post('/demo-atomic-swap', async (req, res) => {
     if (escrowAddress) {
       console.log(`[RESOLVER] Ethereum escrow created at: ${escrowAddress}`);
       
-      // Step 6: Simulate chunk filling
-      console.log('[RESOLVER] Step 6: Simulating progressive chunk filling...');
-      const fills = merkleDemo.simulateChunkFilling(secrets, tree);
+      // Step 6: Simulate partial fulfillment scenarios
+      console.log('[RESOLVER] Step 6: Simulating partial fulfillment with competing takers...');
+      const partialFills = merkleDemo.simulatePartialFulfillment(secrets, tree, 'progressive');
+      const completeFills = merkleDemo.simulateChunkFilling(secrets, tree);
       
       res.json({
-        message: 'Demo atomic swap initiated with merkle tree chunking',
+        message: 'Demo atomic swap initiated with partial fulfillment capability',
         orderId,
         bitcoinHTLC: htlcAddress,
         ethereumEscrow: escrowAddress,
         merkleRoot,
         totalChunks: 100,
-        chunksPerResolver: 25,
         status: 'READY_FOR_EXECUTION',
+        partialFulfillment: {
+          enabled: true,
+          scenarios: ['progressive', 'competing', 'partial_only'],
+          currentScenario: 'progressive',
+          steps: partialFills.map(step => ({
+            step: step.step,
+            taker: step.taker,
+            fillPercent: step.fillPercent,
+            totalFilled: step.totalFilled,
+            chunksRange: step.chunksRange
+          }))
+        },
         demo: {
-          message: "Order split into 100 chunks with merkle tree verification",
-          resolvers: fills.length,
+          message: "Order with partial fulfillment - takers can fill any portion",
+          competingTakers: completeFills.length,
           secretsGenerated: 101,
-          merkleTreeDepth: tree.getDepth()
+          merkleTreeDepth: tree.getDepth(),
+          keyFeatures: [
+            "Multiple takers competing for best rates",
+            "Partial order fulfillment supported",
+            "Progressive filling from 0% to completion",
+            "Any taker can fill any available chunks"
+          ]
         }
       });
     } else {

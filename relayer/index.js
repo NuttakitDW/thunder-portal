@@ -50,27 +50,75 @@ app.use(express.json());
 const activeSwaps = new Map();
 
 // Monitor Bitcoin HTLCs
-async function monitorBitcoinHTLC(orderId, htlcAddress) {
+async function monitorBitcoinHTLC(orderId, htlcAddress, bitcoinTxid) {
   console.log(`[RELAYER] Monitoring Bitcoin HTLC for order ${orderId} at ${htlcAddress}`);
   
-  // Poll for HTLC funding status
-  const checkInterval = setInterval(async () => {
-    try {
-      // In production, would check actual Bitcoin blockchain
-      // For demo, we'll simulate after 10 seconds
+  // If we have a Bitcoin txid, check for confirmations
+  if (bitcoinTxid) {
+    console.log(`[RELAYER] Monitoring Bitcoin transaction: ${bitcoinTxid}`);
+    
+    const checkInterval = setInterval(async () => {
+      try {
+        // Check if Bitcoin transaction is confirmed
+        const response = await axios.get(`http://localhost:18443`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Basic ${Buffer.from('thunderportal:thunderportal123').toString('base64')}`,
+            'Content-Type': 'application/json'
+          },
+          data: JSON.stringify({
+            jsonrpc: '2.0',
+            id: 1,
+            method: 'getrawtransaction',
+            params: [bitcoinTxid, true]
+          })
+        }).catch(() => null);
+
+        if (response?.data?.result?.confirmations >= 1) {
+          const swap = activeSwaps.get(orderId);
+          if (swap && !swap.bitcoinFunded) {
+            console.log(`[RELAYER] Bitcoin HTLC funded for order ${orderId}! Confirmations: ${response.data.result.confirmations}`);
+            swap.bitcoinFunded = true;
+            swap.bitcoinTxid = bitcoinTxid;
+            
+            // Trigger Ethereum escrow creation
+            await createEthereumEscrow(swap);
+            clearInterval(checkInterval);
+          }
+        }
+      } catch (error) {
+        console.error('[RELAYER] Error monitoring Bitcoin transaction:', error);
+      }
+    }, 5000); // Check every 5 seconds
+    
+    // Set timeout to stop monitoring after 10 minutes
+    setTimeout(() => {
+      clearInterval(checkInterval);
       const swap = activeSwaps.get(orderId);
       if (swap && !swap.bitcoinFunded) {
-        console.log(`[RELAYER] Bitcoin HTLC funded for order ${orderId}!`);
-        swap.bitcoinFunded = true;
-        
-        // Trigger Ethereum escrow creation
-        await createEthereumEscrow(swap);
-        clearInterval(checkInterval);
+        console.log(`[RELAYER] Timeout monitoring Bitcoin HTLC for order ${orderId}`);
+        swap.status = 'TIMEOUT';
       }
-    } catch (error) {
-      console.error('[RELAYER] Error monitoring Bitcoin:', error);
-    }
-  }, 5000); // Check every 5 seconds
+    }, 600000); // 10 minutes
+  } else {
+    // Poll for HTLC funding status (fallback for demo mode)
+    const checkInterval = setInterval(async () => {
+      try {
+        const swap = activeSwaps.get(orderId);
+        if (swap && !swap.bitcoinFunded) {
+          // Check if swap was marked as funded externally
+          console.log(`[RELAYER] Bitcoin HTLC funded for order ${orderId}!`);
+          swap.bitcoinFunded = true;
+          
+          // Trigger Ethereum escrow creation
+          await createEthereumEscrow(swap);
+          clearInterval(checkInterval);
+        }
+      } catch (error) {
+        console.error('[RELAYER] Error monitoring Bitcoin:', error);
+      }
+    }, 5000); // Check every 5 seconds
+  }
 }
 
 // Create Ethereum escrow when Bitcoin HTLC is funded
@@ -115,7 +163,7 @@ app.get('/health', (req, res) => {
 
 // Register new swap for monitoring
 app.post('/monitor-swap', async (req, res) => {
-  const { orderId, orderHash, htlcAddress, maker, receiver, htlcHashlock, htlcTimeout } = req.body;
+  const { orderId, orderHash, htlcAddress, maker, receiver, htlcHashlock, htlcTimeout, bitcoinTxid } = req.body;
   
   console.log(`[RELAYER] New swap registered: ${orderId}`);
   
@@ -128,6 +176,7 @@ app.post('/monitor-swap', async (req, res) => {
     receiver,
     htlcHashlock,
     htlcTimeout,
+    bitcoinTxid,
     bitcoinFunded: false,
     ethereumEscrowCreated: false,
     status: 'AWAITING_BITCOIN_FUNDING',
@@ -137,7 +186,7 @@ app.post('/monitor-swap', async (req, res) => {
   activeSwaps.set(orderId, swap);
   
   // Start monitoring Bitcoin HTLC
-  monitorBitcoinHTLC(orderId, htlcAddress);
+  monitorBitcoinHTLC(orderId, htlcAddress, bitcoinTxid);
   
   res.json({ 
     message: 'Swap monitoring started',

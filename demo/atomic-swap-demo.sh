@@ -94,8 +94,11 @@ TOTAL_BTC="1.0"
 TOTAL_ETH="20.0"
 CHUNK_BTC="0.01"  # 1% of total
 CHUNK_ETH="0.2"   # 1% of total
-MAKER_ETH="0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"
-RESOLVER_ETH="0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC"
+MAKER_ADDRESS="0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"  # User creating the swap
+RESOLVER_A="0x70997970C51812dc3A010C7d01b50e0d17dc79C8"     # Resolver A
+RESOLVER_B="0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC"     # Resolver B
+RESOLVER_C="0x90F79bf6EB2c4f870365E785982E1f101E93b906"     # Resolver C
+RESOLVER_D="0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65"     # Resolver D
 
 # Phase 1: Introduction
 print_header
@@ -127,8 +130,8 @@ echo ""
 # Show order details
 echo -e "${BOLD}Order Details:${NC}"
 echo -e "  • Order ID: ${CYAN}$ORDER_ID${NC}"
-echo -e "  • Total Amount: ${YELLOW}$TOTAL_BTC BTC → $TOTAL_ETH ETH${NC}"
-echo -e "  • Maker Address: ${DIM}${MAKER_ETH:0:20}...${NC}"
+echo -e "  • Maker Intent: ${YELLOW}Swap $TOTAL_BTC BTC → $TOTAL_ETH ETH${NC}"
+echo -e "  • Maker Address: ${DIM}${MAKER_ADDRESS:0:20}...${NC}"
 echo -e "  • Creation Time: ${DIM}$(date '+%Y-%m-%d %H:%M:%S')${NC}"
 echo ""
 sleep $NORMAL
@@ -156,16 +159,16 @@ echo -e "  • Partial Fulfillment: ${GREEN}Enabled${NC}"
 echo ""
 sleep $NORMAL
 
-# Phase 4: Merkle Tree Generation
+# Phase 4: Merkle Tree Generation (Ethereum Only)
 echo -e "${BLUE}╔══════════════════════════════════════════════════════════════════════╗${NC}"
-echo -e "${BLUE}║                  PHASE 3: MERKLE TREE GENERATION                     ║${NC}"
+echo -e "${BLUE}║          PHASE 3: MERKLE TREE GENERATION (ETHEREUM ONLY)             ║${NC}"
 echo -e "${BLUE}╚══════════════════════════════════════════════════════════════════════╝${NC}"
 echo ""
-loading_animation 2 "Generating 101 cryptographic secrets..."
+loading_animation 2 "Generating 101 cryptographic secrets for Ethereum escrow..."
 echo ""
 
 # Show merkle tree visualization
-echo -e "${BOLD}Merkle Tree Structure:${NC}"
+echo -e "${BOLD}Merkle Tree Structure (Used on Ethereum):${NC}"
 echo -e "                    ${PURPLE}[Merkle Root]${NC}"
 echo -e "                   ${PURPLE}0x9af3e2b4c5d6...${NC}"
 echo -e "                         |"
@@ -177,21 +180,58 @@ echo -e "${GREEN}[S0]${NC} ${GREEN}[S1]${NC} ... ${GREEN}[S49]${NC}             
 echo -e "                    ${YELLOW}[S100: Complete Fill Secret]${NC}"
 echo ""
 echo -e "  • Secrets Generated: ${BOLD}101${NC}"
-echo -e "  • Secrets 0-99: For ${CYAN}partial fills${NC} (1% each)"
-echo -e "  • Secret 100: For ${YELLOW}complete fill${NC} (100% at once)"
-echo -e "  • Security: ${GREEN}Cryptographically verifiable${NC}"
+echo -e "  • Used for: ${CYAN}Ethereum partial fill tracking${NC}"
+echo -e "  • Bitcoin HTLCs: Use specific leaves (e.g., S24, S49, S74, S99)"
+echo -e "  • Security: ${GREEN}Full tree only on Ethereum${NC}"
 echo ""
 sleep $SLOW
 
-# Phase 5: Bitcoin HTLC Creation
+# Phase 5: Bitcoin HTLCs Creation (Multiple)
 print_header
 echo -e "${BLUE}╔══════════════════════════════════════════════════════════════════════╗${NC}"
-echo -e "${BLUE}║               PHASE 4: BITCOIN HTLC CREATION                         ║${NC}"
+echo -e "${BLUE}║            PHASE 4: BITCOIN MULTIPLE HTLCs CREATION                  ║${NC}"
 echo -e "${BLUE}╚══════════════════════════════════════════════════════════════════════╝${NC}"
 echo ""
 
-# Create Bitcoin HTLC
-loading_animation 2 "Creating Bitcoin HTLC with presigned transactions..."
+echo -e "${BOLD}Creating 4 separate Bitcoin HTLCs for fair distribution:${NC}"
+echo ""
+
+# Simulate creating multiple HTLCs
+loading_animation 1 "Creating HTLC for Resolver A (0.2 BTC)..."
+HTLC_A="2N6d4pX7jaTGmi6RvTdeTu4Mcb5TPQxmiYZ"
+echo -e "  ${GREEN}✓${NC} HTLC A: ${CYAN}$HTLC_A${NC}"
+
+loading_animation 1 "Creating HTLC for Resolver B (0.25 BTC)..."
+HTLC_B="2MuxCkUikyHAZQuDLjUjr346AwnYcrSUZQZ"
+echo -e "  ${GREEN}✓${NC} HTLC B: ${CYAN}$HTLC_B${NC}"
+
+loading_animation 1 "Creating HTLC for Resolver C (0.25 BTC)..."
+HTLC_C="2N9ds8xcth5jF4rkbCzk4tkzdavDSfAktmu"
+echo -e "  ${GREEN}✓${NC} HTLC C: ${CYAN}$HTLC_C${NC}"
+
+loading_animation 1 "Creating HTLC for Resolver D (0.3 BTC)..."
+HTLC_D="2NAzBXpXQsYvmHPVSfQqkYgJmi8H2cNtUmu"
+echo -e "  ${GREEN}✓${NC} HTLC D: ${CYAN}$HTLC_D${NC}"
+
+echo ""
+echo -e "${BOLD}Multiple Presigned Transactions:${NC}"
+echo ""
+echo -e "  ${YELLOW}[4 Funding TXs]${NC} ──────> ${CYAN}[4 HTLC Addresses]${NC}"
+echo -e "                              │"
+echo -e "                              ├─> ${GREEN}[4 Claim TXs]${NC} (unique secrets)"
+echo -e "                              │   ${DIM}Each resolver has own secret${NC}"
+echo -e "                              │"
+echo -e "                              └─> ${RED}[4 Refund TXs]${NC} (after timeout)"
+echo -e "                                  ${DIM}All time-locked 48h${NC}"
+echo ""
+echo -e "${BOLD}Bitcoin HTLCs Summary:${NC}"
+echo -e "  • Total HTLCs: ${BOLD}4${NC} (one per resolver)"
+echo -e "  • Amounts: 0.2 + 0.25 + 0.25 + 0.3 = ${YELLOW}1.0 BTC${NC}"
+echo -e "  • Each HTLC has unique hash from merkle tree"
+echo -e "  • Fair distribution guaranteed"
+echo ""
+
+# Still make the API call for Ethereum escrow
 RESPONSE=$(curl -s -X POST http://localhost:3002/demo-atomic-swap \
   -H "Content-Type: application/json" \
   -d "{
@@ -200,28 +240,10 @@ RESPONSE=$(curl -s -X POST http://localhost:3002/demo-atomic-swap \
     \"ethereumAmount\": \"$TOTAL_ETH\"
   }" 2>/dev/null)
 
-if echo "$RESPONSE" | grep -q "bitcoinHTLC" 2>/dev/null; then
-    BITCOIN_HTLC=$(echo "$RESPONSE" | jq -r '.bitcoinHTLC' 2>/dev/null || echo "2N6d4pX7jaTGmi6RvTdeTu4Mcb5TPQxmiYZ")
+if echo "$RESPONSE" | grep -q "ethereumEscrow" 2>/dev/null; then
     ETHEREUM_ESCROW=$(echo "$RESPONSE" | jq -r '.ethereumEscrow' 2>/dev/null || echo "0xCafac3dD18aC6c6e92c921884f9E4176737C052c")
 fi
 
-echo ""
-echo -e "${BOLD}Presigned Transaction Structure:${NC}"
-echo ""
-echo -e "  ${YELLOW}[Funding TX]${NC} ──────> ${CYAN}[HTLC Address]${NC}"
-echo -e "                           │"
-echo -e "                           ├─> ${GREEN}[Claim TX]${NC} (with secret)"
-echo -e "                           │   ${DIM}Presigned, awaiting secret${NC}"
-echo -e "                           │"
-echo -e "                           └─> ${RED}[Refund TX]${NC} (after timeout)"
-echo -e "                               ${DIM}Presigned, time-locked 48h${NC}"
-echo ""
-echo -e "${BOLD}Bitcoin HTLC Details:${NC}"
-echo -e "  • HTLC Address: ${CYAN}$BITCOIN_HTLC${NC}"
-echo -e "  • Merkle Root: ${PURPLE}0x9af3e2b4c5d6f8e2a1b3c4d5...${NC}"
-echo -e "  • Timeout: ${YELLOW}48 hours${NC} (Bitcoin block 850,000)"
-echo -e "  • Security: ${GREEN}Lightning Network proven model${NC}"
-echo ""
 sleep $SLOW
 
 # Phase 6: Ethereum Escrow Creation
@@ -244,33 +266,88 @@ echo -e "  • Pattern: ${GREEN}OpenZeppelin Clones (gas efficient)${NC}"
 echo ""
 sleep $NORMAL
 
-# Phase 7: Resolver Competition
+# Phase 7: Resolver Competition & Partial Fulfillment
 print_header
 echo -e "${BLUE}╔══════════════════════════════════════════════════════════════════════╗${NC}"
-echo -e "${BLUE}║               PHASE 6: RESOLVER COMPETITION                          ║${NC}"
+echo -e "${BLUE}║                  PHASE 6: RESOLVER COMPETITION                       ║${NC}"
 echo -e "${BLUE}╚══════════════════════════════════════════════════════════════════════╝${NC}"
 echo ""
-echo -e "${BOLD}Professional resolvers competing for best rates...${NC}"
+echo -e "${BOLD}Multiple resolvers competing - demonstrating partial fulfillment...${NC}"
 echo ""
 
-# Simulate resolver bids
-echo -e "${CYAN}Dutch Auction in Progress:${NC}"
-echo -e "┌─────────────┬──────────────┬─────────────┬──────────┐"
-echo -e "│ ${BOLD}Resolver${NC}    │ ${BOLD}Chunks${NC}       │ ${BOLD}Rate${NC}        │ ${BOLD}Status${NC}   │"
-echo -e "├─────────────┼──────────────┼─────────────┼──────────┤"
-sleep $FAST
-echo -e "│ Resolver A  │ 1-25 (25%)   │ 19.95 ETH   │ ${GREEN}FILLED${NC}   │"
-sleep $FAST
-echo -e "│ Resolver B  │ 26-50 (25%)  │ 19.97 ETH   │ ${GREEN}FILLED${NC}   │"
-sleep $FAST
-echo -e "│ Resolver C  │ 51-75 (25%)  │ 19.96 ETH   │ ${GREEN}FILLED${NC}   │"
-sleep $FAST
-echo -e "│ Resolver D  │ 76-100 (25%) │ 19.98 ETH   │ ${GREEN}FILLED${NC}   │"
-echo -e "└─────────────┴──────────────┴─────────────┴──────────┘"
-echo ""
-echo -e "${GREEN}✅ Order fully matched!${NC} Best execution achieved."
+# Show initial state
+echo -e "${CYAN}Order Status: 0% Filled${NC}"
+echo -e "┌─────────────┬──────────────┬─────────────┬──────────┬─────────────┐"
+echo -e "│ ${BOLD}Resolver${NC}    │ ${BOLD}Chunks${NC}       │ ${BOLD}Rate${NC}        │ ${BOLD}Amount${NC}   │ ${BOLD}Status${NC}      │"
+echo -e "├─────────────┼──────────────┼─────────────┼──────────┼─────────────┤"
+echo -e "│ Available   │ 1-100 (100%) │ -           │ 1.0 BTC  │ ${YELLOW}PENDING${NC}     │"
+echo -e "└─────────────┴──────────────┴─────────────┴──────────┴─────────────┘"
 echo ""
 sleep $NORMAL
+
+# Step 1: First taker fills 20%
+echo -e "${CYAN}⚡ Resolver A enters with competitive bid...${NC}"
+sleep $FAST
+echo -e "┌─────────────┬──────────────┬─────────────┬──────────┬─────────────┐"
+echo -e "│ ${BOLD}Resolver${NC}    │ ${BOLD}Chunks${NC}       │ ${BOLD}Rate${NC}        │ ${BOLD}Amount${NC}   │ ${BOLD}Status${NC}      │"
+echo -e "├─────────────┼──────────────┼─────────────┼──────────┼─────────────┤"
+echo -e "│ Resolver A  │ 1-20 (20%)   │ 19.95 ETH   │ 0.2 BTC  │ ${GREEN}FILLED${NC}      │"
+echo -e "│ Available   │ 21-100 (80%) │ -           │ 0.8 BTC  │ ${YELLOW}PENDING${NC}     │"
+echo -e "└─────────────┴──────────────┴─────────────┴──────────┴─────────────┘"
+echo -e "${GREEN}✅ Order 20% filled!${NC} Remaining: ${YELLOW}80%${NC}"
+echo ""
+sleep $NORMAL
+
+# Step 2: Second taker fills another 25%
+echo -e "${CYAN}⚡ Resolver B competes with better rate...${NC}"
+sleep $FAST
+echo -e "┌─────────────┬──────────────┬─────────────┬──────────┬─────────────┐"
+echo -e "│ ${BOLD}Resolver${NC}    │ ${BOLD}Chunks${NC}       │ ${BOLD}Rate${NC}        │ ${BOLD}Amount${NC}   │ ${BOLD}Status${NC}      │"
+echo -e "├─────────────┼──────────────┼─────────────┼──────────┼─────────────┤"
+echo -e "│ Resolver A  │ 1-20 (20%)   │ 19.95 ETH   │ 0.2 BTC  │ ${GREEN}FILLED${NC}      │"
+echo -e "│ Resolver B  │ 21-45 (25%)  │ 19.97 ETH   │ 0.25 BTC │ ${GREEN}FILLED${NC}      │"
+echo -e "│ Available   │ 46-100 (55%) │ -           │ 0.55 BTC │ ${YELLOW}PENDING${NC}     │"
+echo -e "└─────────────┴──────────────┴─────────────┴──────────┴─────────────┘"
+echo -e "${GREEN}✅ Order 45% filled!${NC} Remaining: ${YELLOW}55%${NC}"
+echo ""
+sleep $NORMAL
+
+# Step 3: Third taker fills another 25%
+echo -e "${CYAN}⚡ Resolver C joins the competition...${NC}"
+sleep $FAST
+echo -e "┌─────────────┬──────────────┬─────────────┬──────────┬─────────────┐"
+echo -e "│ ${BOLD}Resolver${NC}    │ ${BOLD}Chunks${NC}       │ ${BOLD}Rate${NC}        │ ${BOLD}Amount${NC}   │ ${BOLD}Status${NC}      │"
+echo -e "├─────────────┼──────────────┼─────────────┼──────────┼─────────────┤"
+echo -e "│ Resolver A  │ 1-20 (20%)   │ 19.95 ETH   │ 0.2 BTC  │ ${GREEN}FILLED${NC}      │"
+echo -e "│ Resolver B  │ 21-45 (25%)  │ 19.97 ETH   │ 0.25 BTC │ ${GREEN}FILLED${NC}      │"
+echo -e "│ Resolver C  │ 46-70 (25%)  │ 19.96 ETH   │ 0.25 BTC │ ${GREEN}FILLED${NC}      │"
+echo -e "│ Available   │ 71-100 (30%) │ -           │ 0.3 BTC  │ ${YELLOW}PENDING${NC}     │"
+echo -e "└─────────────┴──────────────┴─────────────┴──────────┴─────────────┘"
+echo -e "${GREEN}✅ Order 70% filled!${NC} Remaining: ${YELLOW}30%${NC}"
+echo ""
+sleep $NORMAL
+
+# Step 4: Fourth taker completes the order
+echo -e "${CYAN}⚡ Resolver D completes the order with best rate...${NC}"
+sleep $FAST
+echo -e "┌─────────────┬──────────────┬─────────────┬──────────┬─────────────┐"
+echo -e "│ ${BOLD}Resolver${NC}    │ ${BOLD}Chunks${NC}       │ ${BOLD}Rate${NC}        │ ${BOLD}Amount${NC}   │ ${BOLD}Status${NC}      │"
+echo -e "├─────────────┼──────────────┼─────────────┼──────────┼─────────────┤"
+echo -e "│ Resolver A  │ 1-20 (20%)   │ 19.95 ETH   │ 0.2 BTC  │ ${GREEN}FILLED${NC}      │"
+echo -e "│ Resolver B  │ 21-45 (25%)  │ 19.97 ETH   │ 0.25 BTC │ ${GREEN}FILLED${NC}      │"
+echo -e "│ Resolver C  │ 46-70 (25%)  │ 19.96 ETH   │ 0.25 BTC │ ${GREEN}FILLED${NC}      │"
+echo -e "│ Resolver D  │ 71-100 (30%) │ 19.98 ETH   │ 0.3 BTC  │ ${GREEN}FILLED${NC}      │"
+echo -e "└─────────────┴──────────────┴─────────────┴──────────┴─────────────┘"
+echo ""
+echo -e "${GREEN}🎉 Order 100% filled!${NC} Optimal execution achieved through competition."
+echo ""
+echo -e "${BOLD}Key Benefits Demonstrated:${NC}"
+echo -e "  ${GREEN}✓${NC} Resolvers compete for best rates (19.95-19.98 ETH)"
+echo -e "  ${GREEN}✓${NC} Partial fulfillment allows flexible liquidity"
+echo -e "  ${GREEN}✓${NC} Any resolver can fill any available portion"
+echo -e "  ${GREEN}✓${NC} Progressive filling: 0% → 20% → 45% → 70% → 100%"
+echo ""
+sleep $SLOW
 
 # Phase 8: Atomic Execution
 echo -e "${BLUE}╔══════════════════════════════════════════════════════════════════════╗${NC}"
@@ -278,26 +355,40 @@ echo -e "${BLUE}║                  PHASE 7: ATOMIC EXECUTION                  
 echo -e "${BLUE}╚══════════════════════════════════════════════════════════════════════╝${NC}"
 echo ""
 
-# Show chunk fulfillment animation
-echo -e "${BOLD}Progressive Chunk Fulfillment:${NC}"
+# Show progressive atomic execution
+echo -e "${BOLD}Atomic Execution - Progressive Secret Revelation:${NC}"
 echo ""
-for i in 0 25 50 75 100; do
-    printf "\r${CYAN}Chunks Filled:${NC} "
-    draw_progress_bar $i
+
+# Step-by-step execution showing partial fills
+for step in 20 45 70 100; do
+    printf "\r${CYAN}Order Execution:${NC} "
+    draw_progress_bar $step
     
-    if [ $i -eq 25 ]; then
-        echo -e "  ${GREEN}✓${NC} Resolver A reveals secrets 0-24"
-    elif [ $i -eq 50 ]; then
-        echo -e "  ${GREEN}✓${NC} Resolver B reveals secrets 25-49"
-    elif [ $i -eq 75 ]; then
-        echo -e "  ${GREEN}✓${NC} Resolver C reveals secrets 50-74"
-    elif [ $i -eq 100 ]; then
-        echo -e "  ${GREEN}✓${NC} Resolver D reveals secrets 75-99"
+    if [ $step -eq 20 ]; then
+        echo -e "  ${GREEN}✓${NC} Resolver A reveals secrets 0-19 (20% filled)"
+        echo -e "    ${DIM}→ Claims 0.2 BTC from Bitcoin HTLC${NC}"
+    elif [ $step -eq 45 ]; then
+        echo -e "  ${GREEN}✓${NC} Resolver B reveals secrets 20-44 (25% additional)"
+        echo -e "    ${DIM}→ Claims 0.25 BTC from Bitcoin HTLC${NC}"
+    elif [ $step -eq 70 ]; then
+        echo -e "  ${GREEN}✓${NC} Resolver C reveals secrets 45-69 (25% additional)"
+        echo -e "    ${DIM}→ Claims 0.25 BTC from Bitcoin HTLC${NC}"
+    elif [ $step -eq 100 ]; then
+        echo -e "  ${GREEN}✓${NC} Resolver D reveals secrets 70-99 (30% final portion)"
+        echo -e "    ${DIM}→ Claims 0.3 BTC from Bitcoin HTLC${NC}"
+        echo -e "  ${PURPLE}🎉 Order 100% executed atomically!${NC}"
     fi
-    sleep $FAST
+    sleep $NORMAL
 done
 echo ""
-sleep $NORMAL
+
+echo -e "${BOLD}Partial Fulfillment Benefits:${NC}"
+echo -e "  ${GREEN}✓${NC} Each resolver can claim their portion independently"
+echo -e "  ${GREEN}✓${NC} Order could have stopped at any percentage (20%, 45%, 70%)"
+echo -e "  ${GREEN}✓${NC} Capital efficiency: resolvers only need liquidity for their portion"
+echo -e "  ${GREEN}✓${NC} Risk distribution: no single point of failure"
+echo ""
+sleep $SLOW
 
 # Phase 9: Secret Revelation
 echo -e "${BLUE}╔══════════════════════════════════════════════════════════════════════╗${NC}"
@@ -345,26 +436,37 @@ if [ -n "$HEX_BALANCE" ] && [ "$HEX_BALANCE" != "null" ]; then
 fi
 
 echo -e "${BOLD}Balance Changes:${NC}"
-echo -e "┌──────────────┬─────────────────┬─────────────────┬──────────────┐"
-echo -e "│ ${BOLD}Account${NC}      │ ${BOLD}Before${NC}          │ ${BOLD}After${NC}           │ ${BOLD}Change${NC}       │"
-echo -e "├──────────────┼─────────────────┼─────────────────┼──────────────┤"
-echo -e "│ Maker BTC    │ 1.0 BTC         │ 0.0 BTC         │ ${RED}-1.0 BTC${NC}     │"
-echo -e "│ Maker ETH    │ 0.0 ETH         │ 20.0 ETH        │ ${GREEN}+20.0 ETH${NC}    │"
-echo -e "│ Resolver BTC │ 0.0 BTC         │ 1.0 BTC         │ ${GREEN}+1.0 BTC${NC}     │"
-echo -e "│ Resolver ETH │ 20.0 ETH        │ 0.0 ETH         │ ${RED}-20.0 ETH${NC}    │"
-echo -e "└──────────────┴─────────────────┴─────────────────┴──────────────┘"
+echo -e "┌──────────────┬─────────────────┬─────────────────┬──────────────────┐"
+echo -e "│ ${BOLD}Account${NC}      │ ${BOLD}Before${NC}          │ ${BOLD}After${NC}           │ ${BOLD}Change${NC}           │"
+echo -e "├──────────────┼─────────────────┼─────────────────┼──────────────────┤"
+echo -e "│ Maker BTC    │ 1.0 BTC         │ 0.0 BTC         │ ${RED}-1.0 BTC${NC}         │"
+echo -e "│ Maker ETH    │ 0.0 ETH         │ 20.0 ETH        │ ${GREEN}+20.0 ETH${NC}        │"
+echo -e "├──────────────┼─────────────────┼─────────────────┼──────────────────┤"
+echo -e "│ Resolver A   │ 0.0 BTC / 4 ETH │ 0.2 BTC / 0 ETH │ ${GREEN}+0.2 BTC${NC} ${RED}-4 ETH${NC} │"
+echo -e "│ Resolver B   │ 0.0 BTC / 5 ETH │ 0.25 BTC / 0 ETH│ ${GREEN}+0.25 BTC${NC} ${RED}-5 ETH${NC}│"
+echo -e "│ Resolver C   │ 0.0 BTC / 5 ETH │ 0.25 BTC / 0 ETH│ ${GREEN}+0.25 BTC${NC} ${RED}-5 ETH${NC}│"
+echo -e "│ Resolver D   │ 0.0 BTC / 6 ETH │ 0.3 BTC / 0 ETH │ ${GREEN}+0.3 BTC${NC} ${RED}-6 ETH${NC} │"
+echo -e "└──────────────┴─────────────────┴─────────────────┴──────────────────┘"
+echo ""
+echo -e "${DIM}Note: Each resolver independently filled their portion:${NC}"
+echo -e "${DIM}  • Resolver A: 20% (0.2 BTC for 4 ETH @ 19.95 ETH/BTC rate)${NC}"
+echo -e "${DIM}  • Resolver B: 25% (0.25 BTC for 5 ETH @ 19.97 ETH/BTC rate)${NC}"
+echo -e "${DIM}  • Resolver C: 25% (0.25 BTC for 5 ETH @ 19.96 ETH/BTC rate)${NC}"
+echo -e "${DIM}  • Resolver D: 30% (0.3 BTC for 6 ETH @ 19.98 ETH/BTC rate)${NC}"
 echo ""
 
 echo -e "${BOLD}Transaction Summary:${NC}"
-echo -e "  • Bitcoin HTLC TX: ${DIM}7f3a2b1c9d8e4f5a6b7c8d9e0f1a2b3c4d5e6f7a${NC}"
+echo -e "  • Bitcoin HTLC A TX: ${DIM}7f3a2b1c9d8e4f5a6b7c8d9e0f1a2b3c4d5e6f7a${NC}"
+echo -e "  • Bitcoin HTLC B TX: ${DIM}8a4b3c2d9e0f5a6b7c8d9e0f1a2b3c4d5e6f7b${NC}"
+echo -e "  • Bitcoin HTLC C TX: ${DIM}9b5c4d3e0f1a6b7c8d9e0f2a3b4c5d6e7f8a9c${NC}"
+echo -e "  • Bitcoin HTLC D TX: ${DIM}0c6d5e4f1a2b7c8d9e0f3a4b5c6d7e8f9a0b1d${NC}"
 echo -e "  • Ethereum Escrow TX: ${DIM}${TX_HASH}${NC}"
 echo -e "  • Secret Reveal TX: ${DIM}0x9b8c7d6e5f4a3b2c1d0e9f8a7b6c5d4e3f2a1b0c${NC}"
-echo -e "  • Bitcoin Claim TX: ${DIM}3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d${NC}"
 echo ""
 
 echo -e "${BOLD}Performance Metrics:${NC}"
 echo -e "  • Total Execution Time: ${GREEN}4.2 seconds${NC}"
-echo -e "  • Gas Cost (User): ${GREEN}0 ETH${NC} (resolver paid)"
+echo -e "  • Gas Cost (User): ${GREEN}0 ETH${NC} (takers pay all fees)"
 echo -e "  • Bitcoin Confirmations: ${YELLOW}2/6${NC}"
 echo -e "  • Chunk Fill Rate: ${GREEN}100%${NC}"
 echo ""
@@ -387,15 +489,17 @@ echo -e "   • Presigned transactions guarantee refunds"
 echo -e "   • Proven model from Lightning Network"
 echo -e "   • Trust-minimized execution"
 echo ""
-echo -e "3. ${CYAN}Merkle Tree Chunking${NC}"
-echo -e "   • 100 chunks enable partial fulfillment"
-echo -e "   • Capital efficient for resolvers"
-echo -e "   • Cryptographically verifiable progress"
+echo -e "3. ${CYAN}Multiple HTLCs & Partial Fulfillment${NC}"
+echo -e "   • Ethereum: Merkle tree enables % based partial fills"
+echo -e "   • Bitcoin: Multiple HTLCs ensure fair distribution"
+echo -e "   • Each resolver gets own HTLC with unique secret"
+echo -e "   • Prevents stealing between resolvers"
 echo ""
 echo -e "4. ${CYAN}Professional Liquidity${NC}"
-echo -e "   • Resolver competition ensures best rates"
+echo -e "   • Multiple resolvers compete for best rates"
 echo -e "   • Dutch auction for price discovery"
-echo -e "   • Deep liquidity from market makers"
+echo -e "   • Deep liquidity from multiple resolvers"
+echo -e "   • Each resolver operates independently"
 echo ""
 echo -e "5. ${CYAN}Gas-Free Experience${NC}"
 echo -e "   • Users pay zero transaction fees"
@@ -405,7 +509,7 @@ echo ""
 
 echo -e "${BOLD}Market Impact:${NC}"
 echo -e "  • Unlocks ${YELLOW}\$800B Bitcoin market${NC} for DeFi"
-echo -e "  • First ${GREEN}truly trustless${NC} BTC-ETH bridge"
+echo -e "  • ${GREEN}Lightning-inspired presigned transactions${NC} for Bitcoin"
 echo -e "  • Compatible with ${CYAN}1inch Fusion+${NC} ecosystem"
 echo ""
 

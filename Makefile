@@ -85,6 +85,11 @@ demo:
 	@echo "$(YELLOW)⚡ Running Thunder Portal Atomic Swap Demo...$(NC)"
 	@./demo/atomic-swap-demo.sh
 
+# Run the real atomic swap demo with actual blockchain transactions
+demo-real:
+	@echo "$(YELLOW)⚡ Running Thunder Portal REAL Atomic Swap Demo...$(NC)"
+	@./demo/real-atomic-swap-demo.sh
+
 # Stop all services and clean up
 clean:
 	@echo "$(YELLOW)🧹 Deep cleaning Thunder Portal...$(NC)"

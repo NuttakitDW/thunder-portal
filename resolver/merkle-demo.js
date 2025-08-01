@@ -31,7 +31,7 @@ function buildMerkleTree(hashedSecrets) {
   });
   
   // Build merkle tree
-  const tree = new MerkleTree(leaves, crypto.createHash.bind(crypto, 'sha256'), {
+  const tree = new MerkleTree(leaves, sha256, {
     sortPairs: true
   });
   
@@ -42,21 +42,26 @@ function buildMerkleTree(hashedSecrets) {
   };
 }
 
+// SHA256 function for merkle tree
+function sha256(data) {
+  return crypto.createHash('sha256').update(data).digest();
+}
+
 // Get merkle proof for specific chunk
 function getMerkleProof(tree, index) {
   return tree.getProof(index);
 }
 
-// Simulate progressive chunk filling
+// Simulate progressive chunk filling with partial fulfillment
 function simulateChunkFilling(secrets, tree) {
   const fills = [];
   
-  // Simulate 4 resolvers each taking 25%
+  // Simulate 4 resolvers competing and filling different portions
   const resolvers = [
-    { name: 'Resolver A', chunks: [0, 24], fillPercent: 25 },
-    { name: 'Resolver B', chunks: [25, 49], fillPercent: 25 },
-    { name: 'Resolver C', chunks: [50, 74], fillPercent: 25 },
-    { name: 'Resolver D', chunks: [75, 99], fillPercent: 25 }
+    { name: 'Resolver A', chunks: [0, 19], fillPercent: 20, rate: '19.95 ETH', status: 'FILLED' },
+    { name: 'Resolver B', chunks: [20, 44], fillPercent: 25, rate: '19.97 ETH', status: 'FILLED' },
+    { name: 'Resolver C', chunks: [45, 69], fillPercent: 25, rate: '19.96 ETH', status: 'FILLED' },
+    { name: 'Resolver D', chunks: [70, 99], fillPercent: 30, rate: '19.98 ETH', status: 'FILLED' }
   ];
   
   resolvers.forEach(resolver => {
@@ -74,7 +79,59 @@ function simulateChunkFilling(secrets, tree) {
       resolver: resolver.name,
       fillPercent: resolver.fillPercent,
       chunksRange: resolver.chunks,
+      rate: resolver.rate,
+      status: resolver.status,
       revealedSecrets: revealedSecrets.slice(0, 3), // Show first 3 for demo
+      totalRevealed: revealedSecrets.length
+    });
+  });
+  
+  return fills;
+}
+
+// Simulate partial fulfillment scenarios
+function simulatePartialFulfillment(secrets, tree, scenario = 'progressive') {
+  const scenarios = {
+    'progressive': [
+      { step: 1, taker: 'Taker A', chunks: [0, 19], fillPercent: 20, totalFilled: 20 },
+      { step: 2, taker: 'Taker B', chunks: [20, 44], fillPercent: 25, totalFilled: 45 },
+      { step: 3, taker: 'Taker C', chunks: [45, 69], fillPercent: 25, totalFilled: 70 },
+      { step: 4, taker: 'Taker D', chunks: [70, 99], fillPercent: 30, totalFilled: 100 }
+    ],
+    'competing': [
+      { step: 1, taker: 'Taker A', chunks: [0, 29], fillPercent: 30, totalFilled: 30 },
+      { step: 2, taker: 'Taker B', chunks: [30, 69], fillPercent: 40, totalFilled: 70 },
+      { step: 3, taker: 'Taker C', chunks: [70, 99], fillPercent: 30, totalFilled: 100 }
+    ],
+    'partial_only': [
+      { step: 1, taker: 'Taker A', chunks: [0, 24], fillPercent: 25, totalFilled: 25 },
+      { step: 2, taker: 'Taker B', chunks: [25, 49], fillPercent: 25, totalFilled: 50 },
+      { step: 3, taker: 'Taker C', chunks: [50, 74], fillPercent: 25, totalFilled: 75 }
+      // Order remains 75% filled, demonstrating partial fulfillment
+    ]
+  };
+  
+  const selectedScenario = scenarios[scenario] || scenarios['progressive'];
+  const fills = [];
+  
+  selectedScenario.forEach(step => {
+    const revealedSecrets = [];
+    
+    for (let i = step.chunks[0]; i <= step.chunks[1]; i++) {
+      revealedSecrets.push({
+        index: i,
+        secret: secrets[i].toString('hex'),
+        proof: getMerkleProof(tree, i)
+      });
+    }
+    
+    fills.push({
+      step: step.step,
+      resolver: step.resolver,
+      fillPercent: step.fillPercent,
+      totalFilled: step.totalFilled,
+      chunksRange: step.chunks,
+      revealedSecrets: revealedSecrets.slice(0, 2), // Show first 2 for demo
       totalRevealed: revealedSecrets.length
     });
   });
@@ -132,6 +189,7 @@ module.exports = {
   buildMerkleTree,
   getMerkleProof,
   simulateChunkFilling,
+  simulatePartialFulfillment,
   demonstrateMerkleSystem
 };
 

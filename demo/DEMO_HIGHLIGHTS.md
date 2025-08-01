@@ -19,25 +19,30 @@ Our demo showcases the complete Thunder Portal atomic swap flow with all key inn
 - Visual diagram of Funding TX → Claim TX / Refund TX structure
 - 48-hour timeout for Bitcoin (longer than Ethereum's 24h)
 
-### 4. **Resolver Competition** (Phase 6)
-- Dutch auction visualization with 4 resolvers
-- Each resolver takes 25% of chunks
-- Real-time bidding simulation showing best rate discovery
+### 4. **Taker Competition & Partial Fulfillment** (Phase 6)
+- Multiple competing takers, not coordinated execution
+- Progressive filling: 0% → 20% → 45% → 70% → 100%
+- Each taker fills different portions (20%, 25%, 25%, 30%)
+- Real-time competition showing rate optimization
+- Demonstrates partial fulfillment capability
 
-### 5. **Progressive Chunk Fulfillment** (Phase 7)
-- Animated progress bar showing chunks being filled
-- Each resolver reveals their merkle secrets sequentially
-- Demonstrates capital efficiency for market makers
+### 5. **Progressive Atomic Execution** (Phase 7)
+- Step-by-step atomic execution with partial fills
+- Each taker independently reveals secrets and claims Bitcoin
+- Shows capital efficiency - takers only need partial liquidity
+- Order could stop at any percentage, demonstrating flexibility
 
-### 6. **Atomic Execution** (Phase 8)
+### 6. **Secret Revelation** (Phase 8)
 - Step-by-step secret revelation process
 - Shows how secrets on Ethereum enable Bitcoin claims
 - Demonstrates true atomicity - both succeed or neither
+- Partial execution benefits clearly explained
 
-### 7. **Performance Metrics**
-- 4.2 second execution time
-- 0 gas cost for users (resolvers pay)
-- 100% chunk fill rate
+### 7. **Performance Metrics & Benefits**
+- Progressive execution showcasing partial fulfillment
+- 0 gas cost for users (takers pay all fees)
+- Capital efficiency: takers only need partial liquidity
+- Risk distribution: no single point of failure
 - Real transaction hashes displayed
 
 ### 8. **Security Guarantees**
@@ -83,7 +88,9 @@ The demo is designed to impress judges with:
 
 What sets Thunder Portal apart:
 - **No bridges** - Direct settlement eliminates hack risk
-- **Professional liquidity** - Resolver competition ensures best rates
+- **Partial fulfillment** - Orders can be filled in any amount by competing takers
+- **Taker competition** - Multiple market makers compete for best rates
+- **Capital efficiency** - Takers only need liquidity for their portion
 - **Gas abstraction** - Users never pay fees
 - **Lightning-inspired** - Proven security model
 - **1inch integration** - Leverages existing DeFi infrastructure
