@@ -37,8 +37,29 @@ const FACTORY_ABI = [
   "function escrows(bytes32) external view returns (address)"
 ];
 
-// Factory address (from deployment)
-const FACTORY_ADDRESS = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
+// Try to load factory address from deployment files
+const path = require('path');
+const fs = require('fs');
+
+let FACTORY_ADDRESS = "0x5FbDB2315678afecb367f032d93F642f64180aa3"; // fallback
+try {
+  const deploymentPath = path.join(__dirname, '../deployments/simple-escrow-factory.json');
+  const fallbackPath = path.join(__dirname, '../evm-resolver/deployments/simple-escrow-factory-local.json');
+  
+  if (fs.existsSync(deploymentPath)) {
+    const deployment = require(deploymentPath);
+    FACTORY_ADDRESS = deployment.contracts.SimpleEscrowFactory.address;
+    console.log(`[RESOLVER] Using factory address from deployment: ${FACTORY_ADDRESS}`);
+  } else if (fs.existsSync(fallbackPath)) {
+    const deployment = require(fallbackPath);
+    FACTORY_ADDRESS = deployment.contracts.SimpleEscrowFactory.address;
+    console.log(`[RESOLVER] Using factory address from fallback deployment: ${FACTORY_ADDRESS}`);
+  } else {
+    console.log(`[RESOLVER] Warning: Using hardcoded factory address: ${FACTORY_ADDRESS}`);
+  }
+} catch (e) {
+  console.log(`[RESOLVER] Warning: Could not load factory deployment, using hardcoded address: ${FACTORY_ADDRESS}`);
+}
 
 // Express app
 const app = express();

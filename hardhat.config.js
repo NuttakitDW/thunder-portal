@@ -12,6 +12,12 @@ module.exports = {
       }
     }
   },
+  paths: {
+    sources: "./contracts", // Use simple contracts folder for now
+    artifacts: "./artifacts",
+    cache: "./cache",
+    tests: "./test"
+  },
   networks: {
     hardhat: {
       // Commenting out forking for now - will use local hardhat network

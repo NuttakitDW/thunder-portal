@@ -19,6 +19,7 @@ help:
 	@echo "  make start    - Start all services (Bitcoin, Ethereum, APIs)"
 	@echo "  make demo     - Run the atomic swap demonstration (with partial fulfillment)"
 	@echo "  make demo-real - Run demo with real blockchain transactions"
+	@echo "  make test-complete-swap - Test complete atomic swap functionality"
 	@echo "  make clean    - Stop all services and clean up"
 	@echo "  make restart  - Clean and start fresh"
 	@echo ""
@@ -46,7 +47,9 @@ start:
 	@echo "$(YELLOW)📜 Deploying smart contracts...$(NC)"
 	@echo "1️⃣  Deploying 1inch Limit Order Protocol..."
 	@npx hardhat run scripts/deploy-limit-order-protocol.js --network localhost 2>&1 | grep -E "(deployed to:|✅)" || true
-	@echo "2️⃣  Deploying Thunder Portal contracts..."
+	@echo "2️⃣  Deploying SimpleEscrowFactory contract..."
+	@npx hardhat run scripts/deploy-simple-escrow-factory.js --network localhost 2>&1 | grep -E "(deployed to:|✅)" || true
+	@echo "3️⃣  Deploying Thunder Portal contracts..."
 	@cd evm-resolver && ./scripts/deploy-with-forge.sh 2>&1 | grep -E "(deployed to:|✅)" || true
 	@echo ""
 	@echo "$(YELLOW)🔄 Restarting services with new contract...$(NC)"
@@ -70,7 +73,8 @@ start:
 		echo ""; \
 		echo "$(YELLOW)Contracts deployed:$(NC)"; \
 		echo "  • Limit Order Protocol: $(GREEN)$$(cat deployments/limit-order-protocol.json 2>/dev/null | jq -r '.limitOrderProtocol' || echo "Check deployment")$(NC)"; \
-		echo "  • Escrow Factory:      $(GREEN)$$(cat evm-resolver/deployments/simple-escrow-factory-local.json 2>/dev/null | grep -o '"address": "[^"]*"' | head -1 | cut -d'"' -f4 || echo "Check deployment")$(NC)"; \
+		echo "  • Simple Escrow Factory: $(GREEN)$$(cat deployments/simple-escrow-factory.json 2>/dev/null | jq -r '.contracts.SimpleEscrowFactory.address' || echo "Check deployment")$(NC)"; \
+		echo "  • Cross-Chain Factory:   $(GREEN)$$(cat evm-resolver/deployments/simple-escrow-factory-local.json 2>/dev/null | grep -o '"address": "[^"]*"' | head -1 | cut -d'"' -f4 || echo "Check deployment")$(NC)"; \
 		echo ""; \
 		echo "$(YELLOW)To run the demo:$(NC)"; \
 		echo "  $(GREEN)make demo$(NC) - Simulated demo with partial fulfillment"; \
@@ -152,4 +156,8 @@ test-bitcoin:
 test-contracts:
 	@echo "$(YELLOW)Testing smart contracts...$(NC)"
 	@cd evm-resolver && forge test -vv
+
+test-complete-swap:
+	@echo "$(YELLOW)Testing complete atomic swap functionality...$(NC)"
+	@node scripts/test-complete-swap.js
 
