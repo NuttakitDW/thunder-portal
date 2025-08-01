@@ -13,8 +13,12 @@ echo -e "${PURPLE}║       ⚡ THUNDER PORTAL - FULL ATOMIC SWAP DEMO ⚡      
 echo -e "${PURPLE}╚════════════════════════════════════════════════════════════════════╝${NC}"
 echo ""
 
+# Get the directory where this script is located
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+
 # Create logs directory
-mkdir -p /Users/nuttakit/project/unite/unite-agent/thunder-portal/logs
+mkdir -p "$PROJECT_ROOT/logs"
 
 echo -e "${YELLOW}Starting all Thunder Portal services...${NC}"
 echo "======================================"
@@ -25,7 +29,7 @@ if curl -s --user thunderportal:thunderportal123 http://127.0.0.1:18443/ -X POST
     echo -e "${GREEN}✅ Already running${NC}"
 else
     echo "Starting Bitcoin..."
-    cd /Users/nuttakit/project/unite/unite-agent/thunder-portal
+    cd "$PROJECT_ROOT"
     docker-compose up -d bitcoin-regtest
     sleep 5
 fi
@@ -36,7 +40,7 @@ if curl -s http://localhost:8545 > /dev/null 2>&1; then
     echo -e "${GREEN}✅ Already running${NC}"
 else
     echo "Starting Hardhat..."
-    cd /Users/nuttakit/project/unite/unite-agent/thunder-portal/evm-resolver
+    cd "$PROJECT_ROOT/evm-resolver"
     npx hardhat node > ../logs/hardhat.log 2>&1 &
     HARDHAT_PID=$!
     sleep 5
@@ -48,7 +52,7 @@ if curl -s http://localhost:3000/health > /dev/null 2>&1; then
     echo -e "${GREEN}✅ Already running${NC}"
 else
     echo "Starting Bitcoin HTLC API..."
-    cd /Users/nuttakit/project/unite/unite-agent/thunder-portal/bitcoin-htlc
+    cd "$PROJECT_ROOT/bitcoin-htlc"
     cargo run --release > ../logs/bitcoin-htlc.log 2>&1 &
     HTLC_PID=$!
     sleep 5
@@ -60,7 +64,7 @@ if curl -s http://localhost:3001/health > /dev/null 2>&1; then
     echo -e "${GREEN}✅ Already running${NC}"
 else
     echo "Starting Relayer..."
-    cd /Users/nuttakit/project/unite/unite-agent/thunder-portal/relayer
+    cd "$PROJECT_ROOT/relayer"
     npm install > /dev/null 2>&1
     node index.js > ../logs/relayer.log 2>&1 &
     RELAYER_PID=$!
@@ -73,7 +77,7 @@ if curl -s http://localhost:3002/health > /dev/null 2>&1; then
     echo -e "${GREEN}✅ Already running${NC}"
 else
     echo "Starting Resolver..."
-    cd /Users/nuttakit/project/unite/unite-agent/thunder-portal/resolver
+    cd "$PROJECT_ROOT/resolver"
     npm install > /dev/null 2>&1
     node index.js > ../logs/resolver.log 2>&1 &
     RESOLVER_PID=$!

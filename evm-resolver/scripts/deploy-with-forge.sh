@@ -4,8 +4,8 @@ echo "🚀 Deploying SimpleEscrowFactory with Forge..."
 echo "============================================"
 
 # Set paths
-FORGE="/Users/nuttakit/.foundry/bin/forge"
-CAST="/Users/nuttakit/.foundry/bin/cast"
+FORGE="forge"
+CAST="cast"
 
 # Set RPC URL
 RPC_URL="http://localhost:8545"

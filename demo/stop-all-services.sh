@@ -32,7 +32,10 @@ fi
 
 # 3. Stop Bitcoin
 echo -e "\n${YELLOW}Stopping Bitcoin regtest...${NC}"
-cd /Users/nuttakit/project/unite/unite-agent/thunder-portal
+# Get the directory where this script is located
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+cd "$PROJECT_ROOT"
 docker-compose down
 echo -e "${GREEN}✅ Stopped${NC}"
 

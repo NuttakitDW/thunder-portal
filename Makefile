@@ -151,5 +151,5 @@ test-bitcoin:
 
 test-contracts:
 	@echo "$(YELLOW)Testing smart contracts...$(NC)"
-	@cd evm-resolver && /Users/nuttakit/.foundry/bin/forge test -vv
+	@cd evm-resolver && forge test -vv
 

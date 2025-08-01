@@ -255,7 +255,10 @@ loading_animation 2 "Deploying Ethereum escrow contract..."
 echo ""
 
 # Get transaction hash from relayer
-TX_HASH=$(grep "Ethereum escrow creation tx:" /Users/nuttakit/project/unite/unite-agent/thunder-portal/logs/relayer.log 2>/dev/null | tail -1 | awk '{print $NF}')
+# Get the directory where this script is located
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+TX_HASH=$(grep "Ethereum escrow creation tx:" "$PROJECT_ROOT/logs/relayer.log" 2>/dev/null | tail -1 | awk '{print $NF}')
 
 echo -e "${BOLD}Ethereum Escrow Details:${NC}"
 echo -e "  • Escrow Address: ${CYAN}$ETHEREUM_ESCROW${NC}"

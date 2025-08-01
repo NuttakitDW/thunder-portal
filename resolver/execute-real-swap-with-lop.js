@@ -24,8 +24,35 @@ const LIMIT_ORDER_PROTOCOL_ABI = [
 ];
 
 // Get deployment addresses
-const deploymentInfo = require('../deployments/limit-order-protocol.json');
-const factoryDeployment = require('../evm-resolver/deployments/simple-escrow-factory-local.json');
+const path = require('path');
+const fs = require('fs');
+
+// Try to load deployment files, create dummy if not exists
+let deploymentInfo = { limitOrderProtocol: "0x0000000000000000000000000000000000000000" };
+let factoryDeployment = { contracts: { SimpleEscrowFactory: { address: "0x0000000000000000000000000000000000000000" } } };
+
+const lopPath = path.join(__dirname, '../deployments/limit-order-protocol.json');
+const factoryPath = path.join(__dirname, '../evm-resolver/deployments/simple-escrow-factory-local.json');
+
+try {
+  if (fs.existsSync(lopPath)) {
+    deploymentInfo = require(lopPath);
+  } else {
+    console.log('[RESOLVER] Warning: limit-order-protocol.json not found, using placeholder address');
+  }
+} catch (e) {
+  console.log('[RESOLVER] Warning: Could not load limit-order-protocol.json:', e.message);
+}
+
+try {
+  if (fs.existsSync(factoryPath)) {
+    factoryDeployment = require(factoryPath);
+  } else {
+    console.log('[RESOLVER] Warning: simple-escrow-factory-local.json not found, using placeholder address');
+  }
+} catch (e) {
+  console.log('[RESOLVER] Warning: Could not load simple-escrow-factory-local.json:', e.message);
+}
 
 const LIMIT_ORDER_PROTOCOL_ADDRESS = deploymentInfo.limitOrderProtocol;
 const FACTORY_ADDRESS = factoryDeployment.contracts.SimpleEscrowFactory.address;
