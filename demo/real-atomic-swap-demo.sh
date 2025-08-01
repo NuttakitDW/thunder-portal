@@ -149,7 +149,7 @@ sleep 2
 echo -e "${BOLD}Initiating real blockchain transactions...${NC}"
 echo ""
 
-RESPONSE=$(curl -s -X POST http://localhost:3002/execute-real-swap \
+RESPONSE=$(curl -s -X POST http://localhost:3002/execute-real-swap-lop \
   -H "Content-Type: application/json" \
   -d '{
     "orderId": "'$ORDER_ID'",
@@ -180,6 +180,11 @@ BITCOIN_HTLC=$(echo "$RESPONSE" | jq -r '.bitcoin.htlcAddress' 2>/dev/null)
 BITCOIN_FUNDING_TX=$(echo "$RESPONSE" | jq -r '.bitcoin.fundingTxid' 2>/dev/null)
 ETHEREUM_ESCROW=$(echo "$RESPONSE" | jq -r '.ethereum.escrowAddress' 2>/dev/null)
 ETHEREUM_TX=$(echo "$RESPONSE" | jq -r '.ethereum.fundingTxid' 2>/dev/null)
+LOP_ADDRESS=$(echo "$RESPONSE" | jq -r '.limitOrderProtocol.address' 2>/dev/null)
+LOP_INIT_TX=$(echo "$RESPONSE" | jq -r '.limitOrderProtocol.initTxHash' 2>/dev/null)
+LOP_FILL_TX=$(echo "$RESPONSE" | jq -r '.limitOrderProtocol.fillTxHash' 2>/dev/null)
+ORDER_FILLED=$(echo "$RESPONSE" | jq -r '.limitOrderProtocol.orderFilled' 2>/dev/null)
+ORDER_HASH=$(echo "$RESPONSE" | jq -r '.orderHash' 2>/dev/null)
 
 sleep 2
 
@@ -188,6 +193,14 @@ print_header
 echo -e "${BLUE}╔══════════════════════════════════════════════════════════════════════╗${NC}"
 echo -e "${BLUE}║                     PHASE 4: TRANSACTION DETAILS                     ║${NC}"
 echo -e "${BLUE}╚══════════════════════════════════════════════════════════════════════╝${NC}"
+echo ""
+
+echo -e "${BOLD}1inch Limit Order Protocol:${NC}"
+echo -e "  • Contract Address: ${CYAN}$LOP_ADDRESS${NC}"
+echo -e "  • Order Hash: ${PURPLE}$ORDER_HASH${NC}"
+echo -e "  • Initialization TX: ${DIM}$LOP_INIT_TX${NC}"
+echo -e "  • Fill TX: ${DIM}$LOP_FILL_TX${NC}"
+echo -e "  • Order Status: ${GREEN}$ORDER_FILLED${NC}"
 echo ""
 
 echo -e "${BOLD}Bitcoin HTLC Details:${NC}"
@@ -317,10 +330,10 @@ echo -e "   • Separate HTLCs per resolver"
 echo -e "   • Prevents inter-resolver theft"
 echo -e "   • Enables fair competition"
 echo ""
-echo -e "4. ${CYAN}Professional Liquidity${NC}"
-echo -e "   • Resolvers compete for best rates"
-echo -e "   • Deep liquidity from multiple sources"
-echo -e "   • Dutch auction price discovery"
+echo -e "4. ${CYAN}1inch Limit Order Protocol Integration${NC}"
+echo -e "   • Native Bitcoin orders in 1inch ecosystem"
+echo -e "   • Professional liquidity from resolver network"
+echo -e "   • Gas-efficient settlement via 1inch"
 echo ""
 echo -e "5. ${CYAN}User Experience${NC}"
 echo -e "   • Zero gas fees for users"

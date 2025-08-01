@@ -7,6 +7,7 @@ const crypto = require('crypto');
 const merkleDemo = require('./merkle-demo');
 const BitcoinService = require('./bitcoin-service');
 const executeRealSwap = require('./execute-real-swap');
+const executeRealSwapWithLOP = require('./execute-real-swap-with-lop');
 const executeRealPartialSwap = require('./execute-real-partial-swap');
 
 // Configuration
@@ -150,6 +151,9 @@ app.get('/escrow-status/:escrowAddress', async (req, res) => {
 
 // Execute real atomic swap with actual blockchain transactions
 app.post('/execute-real-swap', executeRealSwap(bitcoinService, provider, resolver));
+
+// Execute real atomic swap with 1inch Limit Order Protocol integration
+app.post('/execute-real-swap-lop', executeRealSwapWithLOP(bitcoinService, provider, resolver));
 
 // Execute real atomic swap with partial fulfillment
 app.post('/execute-real-partial-swap', executeRealPartialSwap(bitcoinService, provider, resolver));

@@ -8,6 +8,7 @@ class BitcoinService {
     this.rpcUrl = process.env.BITCOIN_RPC_URL || 'http://localhost:18443';
     this.rpcUser = process.env.BITCOIN_RPC_USER || 'thunderportal';
     this.rpcPassword = process.env.BITCOIN_RPC_PASSWORD || 'thunderportal123';
+    this.wallet = process.env.BITCOIN_WALLET || 'test_wallet';
     this.apiUrl = process.env.BITCOIN_API_URL || 'http://localhost:3000/v1';
   }
 
@@ -17,8 +18,12 @@ class BitcoinService {
   async rpcCall(method, params = []) {
     const auth = Buffer.from(`${this.rpcUser}:${this.rpcPassword}`).toString('base64');
     
+    // Add wallet to RPC URL if it's a wallet-specific call
+    const walletMethods = ['listunspent', 'sendrawtransaction', 'getnewaddress', 'getbalance', 'listwallets'];
+    const url = walletMethods.includes(method) ? `${this.rpcUrl}/wallet/${this.wallet}` : this.rpcUrl;
+    
     try {
-      const response = await axios.post(this.rpcUrl, {
+      const response = await axios.post(url, {
         jsonrpc: '2.0',
         id: Math.random().toString(36).substring(7),
         method,

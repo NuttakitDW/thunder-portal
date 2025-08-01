@@ -99,7 +99,8 @@ curl -s http://localhost:8545 > /dev/null && echo -e "✅ Ethereum Node:     ${G
 curl -s --user thunderportal:thunderportal123 http://127.0.0.1:18443/ -X POST -d '{"method":"getblockchaininfo"}' > /dev/null 2>&1 && echo -e "✅ Bitcoin Node:      ${GREEN}Running${NC} (port 18443)" || echo -e "❌ Bitcoin Node:      ${RED}Failed${NC}"
 
 echo -e "\n${YELLOW}Smart Contracts:${NC}"
-echo -e "✅ EscrowFactory:     ${GREEN}0x5FbDB2315678afecb367f032d93F642f64180aa3${NC}"
+echo -e "• Limit Order Protocol: ${YELLOW}Deploying...${NC}"
+echo -e "• Escrow Factory:      ${YELLOW}Deploying...${NC}"
 
 echo -e "\n${GREEN}All services are ready!${NC}"
 echo -e "\nTo view logs:"

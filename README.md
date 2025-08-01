@@ -309,6 +309,75 @@ timeline
 - `POST /v1/htlc/{id}/claim` - Claim with preimage
 - `GET /v1/health` - Service status
 
+## 🔗 1inch Limit Order Protocol Integration
+
+Thunder Portal integrates with 1inch's Limit Order Protocol to enable trustless Bitcoin-Ethereum atomic swaps within the 1inch ecosystem.
+
+### How It Works
+
+```mermaid
+graph LR
+    subgraph "1inch Protocol"
+        LOP[Limit Order Protocol]
+        F[Fusion+ Settlement]
+    end
+    
+    subgraph "Thunder Portal"
+        TP[Thunder Portal]
+        BH[Bitcoin HTLC]
+        EE[Ethereum Escrow]
+    end
+    
+    subgraph "Flow"
+        U[User] -->|1. Create Order| LOP
+        LOP -->|2. Register BTC Order| TP
+        TP -->|3. Create HTLC| BH
+        TP -->|4. Create Escrow| EE
+        F -->|5. Settle on Match| EE
+        EE -->|6. Release BTC| BH
+    end
+```
+
+### Integration Points
+
+1. **Order Creation**
+   - Users create limit orders through 1inch interface
+   - Orders specify BTC/ETH exchange parameters
+   - Thunder Portal registers as resolver for Bitcoin orders
+
+2. **Order Matching**
+   - 1inch protocol matches orders as usual
+   - When Bitcoin orders match, Thunder Portal is notified
+   - Atomic swap process initiates automatically
+
+3. **Settlement**
+   - 1inch Fusion+ handles Ethereum-side settlement
+   - Thunder Portal coordinates Bitcoin HTLC creation
+   - Cryptographic proofs ensure atomic execution
+
+### Smart Contract Integration
+
+```solidity
+// LimitOrderProtocol.sol integration
+function initiateCrossChainSwap(
+    bytes32 orderHash,
+    uint256 bitcoinAmount,
+    uint256 ethereumAmount
+) external {
+    // Called by Thunder Portal when BTC order matches
+    // Creates escrow and links to Bitcoin HTLC
+    remainingAmount[orderHash] = ethereumAmount;
+}
+```
+
+### Benefits
+
+- **Native Integration**: Bitcoin swaps appear as regular limit orders in 1inch
+- **Familiar UX**: Users interact with standard 1inch interface
+- **Professional Liquidity**: Access to 1inch's resolver network
+- **Gas Optimization**: Leverages 1inch's gas-efficient settlement
+- **Composability**: Bitcoin orders can be part of complex routes
+
 ## 🚦 Current Status
 
 ### ✅ Implemented
@@ -411,12 +480,13 @@ Thunder Portal provides two demo modes:
 - Shows resolver competition (20% → 45% → 70% → 100%)
 - Perfect for understanding all innovations
 
-#### `make demo-real` - Real Blockchain Demo
+#### `make demo-real` - Real Blockchain Demo with 1inch Integration
 - Executes actual atomic swaps on local test networks
+- Integrates with 1inch Limit Order Protocol
 - Creates real Bitcoin HTLCs and Ethereum smart contracts
 - Generates real transaction hashes on both chains
 - Shows actual blockchain confirmations
-- Simpler swap without partial fulfillment
+- Registers orders in 1inch ecosystem
 
 **What happens in the real demo:**
 1. Creates a real Bitcoin HTLC with 0.1 BTC
