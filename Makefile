@@ -17,7 +17,8 @@ help:
 	@echo "$(GREEN)Thunder Portal Demo Commands:$(NC)"
 	@echo "  make setup    - Install dependencies and prepare environment"
 	@echo "  make start    - Start all services (Bitcoin, Ethereum, APIs)"
-	@echo "  make demo     - Run the atomic swap demonstration"
+	@echo "  make demo     - Run the atomic swap demonstration (with partial fulfillment)"
+	@echo "  make demo-real - Run demo with real blockchain transactions"
 	@echo "  make clean    - Stop all services and clean up"
 	@echo "  make restart  - Clean and start fresh"
 	@echo ""
@@ -80,7 +81,7 @@ start:
 		exit 1; \
 	fi
 
-# Run the atomic swap demo
+# Run the atomic swap demo (simulated with partial fulfillment)
 demo:
 	@echo "$(YELLOW)⚡ Running Thunder Portal Atomic Swap Demo...$(NC)"
 	@./demo/atomic-swap-demo.sh

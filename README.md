@@ -9,7 +9,7 @@ A complete implementation that extends 1inch Fusion+ to support Bitcoin, enablin
 - **No Bridge Risk**: Uses HTLCs instead of wrapped tokens
 - **Partial Fulfillment**: Orders split into 100 chunks for better liquidity
 - **Dual Escrow System**: Coordinated escrows on both Ethereum and Bitcoin
-- **Presigned Transactions**: Bitcoin security model borrowed from Lightning
+- **Presigned Refunds**: Bitcoin security model borrowed from Lightning (refunds only, not claims)
 - **Professional Liquidity**: Resolver network provides competitive rates
 - **Gas-Free**: Users pay zero gas fees (resolvers handle everything)
 
@@ -45,7 +45,7 @@ graph TB
         end
         subgraph "Bitcoin"
             BTC[Bitcoin Network]
-            BHTLC[Bitcoin HTLC<br/>Presigned TX]
+            BHTLC[Bitcoin HTLC<br/>Refund TX Only]
         end
     end
     
@@ -57,7 +57,7 @@ graph TB
     
     TPR -->|Create ETH Escrow| ESC
     TPR -->|Request HTLC| HTLC
-    HTLC -->|Generate Presigned| PM
+    HTLC -->|Generate Refund TX| PM
     PM -->|Deploy HTLC| BHTLC
     
     Taker -->|Monitor Orders| TPR
@@ -136,14 +136,15 @@ flowchart LR
    - Atomic execution guaranteed by shared secret
    - **Per-Order Isolation**: Each swap gets dedicated escrow contracts
 
-4. **Presigned Transaction Model**
+4. **Presigned Refund Model**
    - Borrowed from Bitcoin Lightning Network concepts
    - Creates refund transactions signed before funding
    - Enables trustless timeout guarantees
    - Key components:
      - Funding transaction (creates HTLC)
-     - Claim transaction (presigned, reveals secret)
+     - Claim transaction (CANNOT be presigned - needs secret)
      - Refund transaction (presigned, time-locked)
+   - Note: Claims require user to be online with one-click UX
 
 5. **Thunder Portal Resolver**
    - Monitors chunked orders from forked protocol
@@ -182,7 +183,7 @@ sequenceDiagram
     Resolver->>Ethereum: Deploy EscrowSrc proxy (ETH locked)
     Note over Ethereum: New proxy for this order via Factory
     Resolver->>Bitcoin: Create presigned HTLC
-    Note over Bitcoin: Funding TX + Presigned Claim/Refund
+    Note over Bitcoin: Funding TX + Refund TX only
     
     Resolver->>ForkedProtocol: Fill chunks with proof
     ForkedProtocol->>Maker: Chunks matched notification
@@ -192,7 +193,7 @@ sequenceDiagram
     Note over Ethereum,Bitcoin: Atomic execution complete
 ```
 
-### BTC → ETH Swap (with Presigned Model)
+### BTC → ETH Swap (with One-Click Claims)
 
 ```mermaid
 sequenceDiagram
@@ -259,13 +260,13 @@ ELSE
 ENDIF
 ```
 
-### Presigned Transaction Structure
+### Transaction Structure & User Claims
 
 ```mermaid
 graph TD
     subgraph "Transaction Flow"
         FT[Funding TX<br/>Creates HTLC Output]
-        CT[Claim TX<br/>Presigned<br/>Requires Secret]
+        CT[Claim TX<br/>NOT Presigned<br/>Needs Secret + User Signature]
         RT[Refund TX<br/>Presigned<br/>Time-locked]
     end
     
@@ -274,15 +275,15 @@ graph TD
     HTLC -->|Path 2| RT
     
     style FT fill:#9f9,stroke:#333,stroke-width:2px
-    style CT fill:#99f,stroke:#333,stroke-width:2px
+    style CT fill:#fbb,stroke:#333,stroke-width:2px,stroke-dasharray: 5 5
     style RT fill:#f99,stroke:#333,stroke-width:2px
 ```
 
 **Key Properties:**
 - **Funding TX**: Broadcast immediately to create HTLC
-- **Claim TX**: Presigned but requires secret revelation
-- **Refund TX**: Presigned with timelock, ensures maker can recover funds
-- **Atomic Safety**: Refund TX protects against resolver misbehavior
+- **Claim TX**: Cannot be presigned (secret unknown at creation time)
+- **Refund TX**: Presigned with timelock, ensures user can recover funds
+- **User Claims**: Simplified one-click interface when secret is revealed
 
 ### Security Model
 
@@ -350,8 +351,9 @@ To support Bitcoin in 1inch Fusion+, we need to:
 
 ### Prerequisites
 - Docker & Docker Compose
-- Node.js (v18+) & npm
+- Node.js (v18+)
 - Rust & Cargo
+- Make
 
 ### Local Development Setup
 
@@ -360,14 +362,14 @@ To support Bitcoin in 1inch Fusion+, we need to:
 git clone https://github.com/your-org/thunder-portal
 cd thunder-portal
 
-# 2. Install dependencies
-npm install
+# 2. Setup everything
+make setup
 
-# 3. Start development environment
-npm start
+# 3. Start all services
+make start
 
-# 4. Test the environment
-npm run test:env
+# 4. Run the demo
+make demo
 ```
 
 ### What's Running
@@ -398,26 +400,64 @@ All accounts are pre-funded with 10,000 ETH:
 - Private Key: `cVj5kMEHS9hSCwNvSjAqaf3x4HmgDMYu3yqeRCaWHYuBBFqhJzxs`
 - Funded with ~50 BTC (regtest)
 
+### Demo Commands
+
+Thunder Portal provides two demo modes:
+
+#### `make demo` - Simulated Demo (Recommended)
+- Shows the complete Thunder Portal vision
+- Demonstrates partial fulfillment with multiple resolvers
+- Illustrates order chunking (100 chunks)
+- Shows resolver competition (20% → 45% → 70% → 100%)
+- Perfect for understanding all innovations
+
+#### `make demo-real` - Real Blockchain Demo
+- Executes actual atomic swaps on local test networks
+- Creates real Bitcoin HTLCs and Ethereum smart contracts
+- Generates real transaction hashes on both chains
+- Shows actual blockchain confirmations
+- Simpler swap without partial fulfillment
+
+**What happens in the real demo:**
+1. Creates a real Bitcoin HTLC with 0.1 BTC
+2. Deploys an Ethereum escrow contract with 2.0 ETH
+3. Generates actual transaction IDs you can verify
+4. Mines blocks for confirmations
+5. Executes the atomic swap with real cryptographic proofs
+
+**Example output:**
+```
+Bitcoin HTLC funded with txid: 7a8b9c...
+Ethereum escrow deployed at: 0x1234...
+Atomic swap completed successfully!
+```
+
 ### Available Commands
 
 ```bash
-# Start environment
-npm start
+# Setup everything (one time)
+make setup
 
-# Stop environment
-npm stop
+# Start all services
+make start
 
-# Test connections
-npm run test:env
+# Run the demo (simulated with partial fulfillment)
+make demo
 
-# Clean everything (remove all data)
-npm run clean
+# Run the demo with real blockchain transactions
+make demo-real
 
-# Compile contracts
-npm run compile
+# Stop all services and clean up
+make clean
 
-# Deploy contracts locally
-npm run deploy:local
+# Restart everything fresh
+make restart
+
+# Check service status
+make status
+
+# View logs
+make logs
 ```
 
 ### Manual Operations
@@ -467,8 +507,8 @@ tail -f logs/hardhat.log
 
 #### Reset Everything
 ```bash
-npm run clean
-npm start
+make clean
+make start
 ```
 
 ## 🎯 Key Features
@@ -571,10 +611,44 @@ graph TB
 - **Implementation Pattern**: Shared logic contract, unique proxy per order
 - **Security**: Complete isolation between different swaps
 
-### Why Presigned Transactions?
-- **Trust Minimization**: Refund guaranteed even if resolver disappears
-- **Bitcoin Limitation**: Bitcoin script can't directly interact with Ethereum
-- **Lightning Inspiration**: Proven model from Lightning Network
+### Why Presigned Refunds (Not Claims)?
+- **Refund Protection**: Guaranteed recovery if swap fails
+- **Claim Limitation**: Claims cannot be presigned (secret unknown)
+- **User Experience**: One-click claiming when secret revealed
+- **Bitcoin Reality**: Signatures must include all transaction data
+
+### User-Friendly Bitcoin Claiming
+
+When users need to claim Bitcoin after an ETH → BTC swap:
+
+#### What Happens Behind the Scenes
+1. **Secret Detection**: Thunder Portal monitors Ethereum for secret revelation
+2. **Instant Notification**: User gets notified "Your Bitcoin is ready!"
+3. **One-Click Interface**: Simple button to claim Bitcoin
+4. **Wallet Integration**: Works with popular Bitcoin wallets (Xverse, UniSat, Leather)
+5. **Automatic Execution**: Thunder Portal handles all complexity
+
+#### User Experience
+```
+┌─────────────────────────────────────┐
+│     🎉 Your Bitcoin is Ready!       │
+│                                     │
+│  Amount: 0.5 BTC                    │
+│  Status: ✅ Ready to claim          │
+│                                     │
+│     [ 💰 CLAIM MY BITCOIN ]         │
+│                                     │
+└─────────────────────────────────────┘
+```
+
+The user simply:
+1. Receives notification
+2. Opens Thunder Portal
+3. Clicks "Claim My Bitcoin"
+4. Approves in their wallet
+5. Done! Bitcoin received
+
+No need to understand HTLCs, secrets, or Bitcoin Script!
 
 ### Why Fork 1inch Fusion+?
 - **No Native Bitcoin Support**: Current protocol only handles EVM chains
