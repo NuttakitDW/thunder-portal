@@ -157,6 +157,19 @@ test-contracts:
 	@echo "$(YELLOW)Testing smart contracts...$(NC)"
 	@cd evm-resolver && forge test -vv
 
+# Thunder CLI
+cli-demo:
+	@echo "$(YELLOW)⚡ Starting Thunder Portal CLI Demo...$(NC)"
+	@cd thunder-cli && npm run demo
+
+cli-build:
+	@echo "$(YELLOW)Building Thunder Portal CLI...$(NC)"
+	@cd thunder-cli && npm install && npm run build
+
+cli-install:
+	@echo "$(YELLOW)Installing Thunder Portal CLI globally...$(NC)"
+	@cd thunder-cli && npm install -g .
+
 test-complete-swap:
 	@echo "$(YELLOW)Testing complete atomic swap functionality...$(NC)"
 	@node scripts/test-complete-swap.js
