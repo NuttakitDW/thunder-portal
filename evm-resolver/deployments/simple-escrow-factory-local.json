@@ -1,0 +1,15 @@
+{
+  "network": "hardhat-local",
+  "timestamp": "2025-08-01T12:52:15Z",
+  "contracts": {
+    "SimpleEscrowFactory": {
+      "address": ""
+    },
+    "TestEscrow": {
+      "orderHash": "",
+      "address": "",
+      "htlcHashlock": "",
+      "htlcTimeout": 1754139135
+    }
+  }
+}
