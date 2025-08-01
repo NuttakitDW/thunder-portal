@@ -10,7 +10,7 @@
   },
   "scripts": {
     "dev": "tsx src/cli.tsx",
-    "build": "tsc && chmod +x dist/cli.js",
+    "build": "tsc && mkdir -p dist/utils && cp src/utils/*.js dist/utils/ && chmod +x dist/cli.js",
     "start": "node dist/cli.js",
     "lint": "eslint src --ext .ts,.tsx",
     "prepublishOnly": "npm run build",

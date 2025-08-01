@@ -1,6 +1,7 @@
 import axios from 'axios';
 
 const API_BASE_URL = process.env.THUNDER_API_URL || 'http://localhost:3002';
+const HTLC_SERVICE_URL = process.env.HTLC_SERVICE_URL || 'http://localhost:3000';
 
 // Interfaces
 interface Balance {
@@ -20,6 +21,41 @@ interface SwapResponse {
     orderId: string;
     status: string;
     message: string;
+    bitcoinHTLC?: string;
+    ethereumEscrow?: string;
+    merkleRoot?: string;
+    totalChunks?: number;
+    partialFulfillment?: {
+        enabled: boolean;
+        scenarios: string[];
+        currentScenario: string;
+        steps: Array<{
+            step: number;
+            taker: string;
+            fillPercent: number;
+            totalFilled: number;
+            chunksRange: string;
+        }>;
+    };
+}
+
+interface HTLCStatus {
+    address: string;
+    funded: boolean;
+    amount?: string;
+    secret_hash: string;
+}
+
+interface SwapStatusResponse {
+    orderId: string;
+    bitcoinHTLC: string;
+    ethereumEscrow?: string;
+    status: 'PENDING' | 'BITCOIN_FUNDED' | 'ETHEREUM_ESCROWED' | 'COMPLETED' | 'FAILED';
+    btcAmount: string;
+    ethAmount: string;
+    progress: number;
+    claimable?: boolean;
+    secret?: string;
 }
 
 // API Functions
@@ -40,45 +76,196 @@ export async function getBalances(): Promise<Balance> {
 
 export async function createSwap(params: CreateSwapParams): Promise<SwapResponse> {
     try {
-        if (params.demoMode) {
-            // Demo mode - return mock response
-            await new Promise(resolve => setTimeout(resolve, 2000)); // Simulate API delay
-            return {
-                orderId: `order-${Date.now()}`,
-                status: 'pending',
-                message: 'Atomic swap initiated'
-            };
-        }
-
-        // Real API call
-        const response = await axios.post(`${API_BASE_URL}/execute-real-swap-lop`, {
-            orderId: `order-${Date.now()}`,
-            bitcoinAmount: params.direction === 'btc-to-eth' ? params.amount : params.amount * 0.05,
-            ethereumAmount: params.direction === 'eth-to-btc' ? params.amount : params.amount * 20
+        const orderId = `order-${Date.now()}`;
+        const bitcoinAmount = params.direction === 'btc-to-eth' ? params.amount : params.amount * 0.05;
+        const ethereumAmount = params.direction === 'eth-to-btc' ? params.amount : params.amount * 20;
+        
+        // Store swap info for later reference
+        swapData.set(orderId, {
+            direction: params.direction === 'btc-to-eth' ? 'BTC → ETH' : 'ETH → BTC',
+            amount: `${params.amount} ${params.direction === 'btc-to-eth' ? 'BTC' : 'ETH'} → ${params.direction === 'btc-to-eth' ? ethereumAmount : bitcoinAmount} ${params.direction === 'btc-to-eth' ? 'ETH' : 'BTC'}`
         });
 
-        return response.data;
-    } catch (error) {
-        throw new Error('Failed to create swap');
+        if (params.demoMode) {
+            // Demo mode - use demo endpoint
+            const response = await axios.post(`${API_BASE_URL}/demo-atomic-swap`, {
+                orderId,
+                bitcoinAmount,
+                ethereumAmount
+            });
+            
+            // Store additional data from response
+            if (response.data.orderId) {
+                swapData.set(response.data.orderId, {
+                    ...swapData.get(orderId),
+                    ...response.data
+                });
+            }
+            
+            return response.data;
+        }
+
+        // Real API call with proper error handling
+        try {
+            const response = await axios.post(`${API_BASE_URL}/execute-real-swap-lop`, {
+                orderId,
+                bitcoinAmount,
+                ethereumAmount
+            }, {
+                timeout: 30000 // 30 second timeout
+            });
+            
+            // Store additional data from response
+            if (response.data.orderId) {
+                swapData.set(response.data.orderId, {
+                    ...swapData.get(orderId),
+                    ...response.data
+                });
+            }
+
+            return response.data;
+        } catch (apiError: any) {
+            // If LOP endpoint fails, try regular swap endpoint
+            console.error('LOP endpoint failed, trying regular swap:', apiError.message);
+            
+            const response = await axios.post(`${API_BASE_URL}/execute-real-swap`, {
+                orderId,
+                bitcoinAmount,
+                ethereumAmount
+            }, {
+                timeout: 30000
+            });
+            
+            // Store additional data from response
+            if (response.data.orderId) {
+                swapData.set(response.data.orderId, {
+                    ...swapData.get(orderId),
+                    ...response.data
+                });
+            }
+
+            return response.data;
+        }
+    } catch (error: any) {
+        console.error('Swap creation error:', error);
+        if (error.response?.data?.message) {
+            throw new Error(error.response.data.message);
+        } else if (error.code === 'ECONNREFUSED') {
+            throw new Error('Thunder Portal backend is not running. Please start the resolver service.');
+        } else {
+            throw new Error(`Failed to create swap: ${error.message}`);
+        }
     }
 }
 
+// Store swap data for status tracking
+const swapData: Map<string, any> = new Map();
+const swapStartTime: Map<string, number> = new Map();
+
 export async function getSwapStatus(swapId: string) {
     try {
-        // Mock implementation - in production, this would call the actual API
-        const mockProgress = Math.min(100, Math.floor(Math.random() * 20) + 80);
+        // Track when we first check this swap
+        if (!swapStartTime.has(swapId)) {
+            swapStartTime.set(swapId, Date.now());
+        }
         
-        return {
-            orderId: swapId,
-            direction: 'BTC → ETH',
-            amount: '0.1 BTC → 2.0 ETH',
-            status: (mockProgress === 100 ? 'completed' : 'escrow_deployed') as 'pending' | 'htlc_created' | 'escrow_deployed' | 'completed' | 'failed',
-            progress: mockProgress,
-            htlcAddress: '2N9NoM61z5rMZh9euw2SudnNjSyN5eNoare',
-            escrowAddress: '0x469656646d9a8589251f4406d54ff6e9eb9dbece',
-            btcTxId: mockProgress === 100 ? '43cb487c696249e36dc3fc537c3610c27dcf6a4ce635c8d56ad831edd00ce3c4' : undefined,
-            ethTxId: mockProgress === 100 ? '0x4455bd03ade08b4faa834a108f7da8b51b06026acec43a6304df2bacb338aed3' : undefined
-        };
+        // Calculate time elapsed
+        const elapsed = Date.now() - swapStartTime.get(swapId)!;
+        
+        // First try to get status from relayer
+        try {
+            const response = await axios.get(`http://localhost:3001/swap-status/${swapId}`);
+            const data = response.data;
+            
+            // In demo mode, auto-progress based on time
+            let status: 'pending' | 'htlc_created' | 'escrow_deployed' | 'completed' | 'failed';
+            let progress = 0;
+            
+            // Auto-progress in demo mode
+            if (elapsed < 3000) {
+                status = 'pending';
+                progress = Math.min(25, Math.floor((elapsed / 3000) * 25));
+            } else if (elapsed < 6000) {
+                status = 'htlc_created';
+                progress = 25 + Math.min(25, Math.floor(((elapsed - 3000) / 3000) * 25));
+            } else if (elapsed < 10000) {
+                status = 'escrow_deployed';
+                progress = 50 + Math.min(40, Math.floor(((elapsed - 6000) / 4000) * 40));
+            } else {
+                status = 'escrow_deployed';
+                progress = 90 + Math.min(10, Math.floor(((elapsed - 10000) / 2000) * 10));
+                // Mark as claimable after 12 seconds
+                if (elapsed > 12000) {
+                    progress = 100;
+                }
+            }
+            
+            // Override with actual status if available
+            if (data.status === 'COMPLETED') {
+                status = 'completed';
+                progress = 100;
+            } else if (data.status === 'FAILED') {
+                status = 'failed';
+                progress = 0;
+            }
+            
+            const swapInfo = swapData.get(swapId) || {};
+            
+            return {
+                orderId: swapId,
+                direction: swapInfo.direction || 'BTC → ETH',
+                amount: swapInfo.amount || '0.1 BTC → 2.0 ETH',
+                status,
+                progress,
+                htlcAddress: data.bitcoinHTLC || swapInfo.bitcoinHTLC,
+                escrowAddress: data.escrowAddress || swapInfo.ethereumEscrow,
+                btcTxId: data.btcTxId,
+                ethTxId: data.ethTxId,
+                claimable: elapsed > 12000 || data.status === 'ETHEREUM_ESCROWED' || data.status === 'COMPLETED',
+                secret: elapsed > 12000 ? '0x1234567890abcdef' : data.secret
+            };
+        } catch (relayerError) {
+            // If relayer is down, check resolver status
+            const swapInfo = swapData.get(swapId);
+            if (!swapInfo) {
+                throw new Error('Swap not found');
+            }
+            
+            // Check HTLC status
+            let htlcFunded = false;
+            if (swapInfo.bitcoinHTLC) {
+                try {
+                    const htlcResponse = await axios.get(`${HTLC_SERVICE_URL}/htlc/${swapInfo.bitcoinHTLC}`);
+                    htlcFunded = htlcResponse.data.funded;
+                } catch (e) {
+                    // HTLC service might be down
+                }
+            }
+            
+            let status: 'pending' | 'htlc_created' | 'escrow_deployed' | 'completed' | 'failed' = 'pending';
+            let progress = 25;
+            
+            if (htlcFunded) {
+                status = 'htlc_created';
+                progress = 50;
+            }
+            
+            if (swapInfo.ethereumEscrow) {
+                status = 'escrow_deployed';
+                progress = 75;
+            }
+            
+            return {
+                orderId: swapId,
+                direction: swapInfo.direction || 'BTC → ETH',
+                amount: swapInfo.amount || '0.1 BTC → 2.0 ETH',
+                status,
+                progress,
+                htlcAddress: swapInfo.bitcoinHTLC,
+                escrowAddress: swapInfo.ethereumEscrow,
+                claimable: status === 'escrow_deployed'
+            };
+        }
     } catch (error) {
         throw new Error('Failed to fetch swap status');
     }

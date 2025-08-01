@@ -14,16 +14,28 @@ NC := \033[0m # No Color
 
 # Show available commands
 help:
-	@echo "$(GREEN)Thunder Portal Demo Commands:$(NC)"
-	@echo "  make setup    - Install dependencies and prepare environment"
-	@echo "  make start    - Start all services (Bitcoin, Ethereum, APIs)"
-	@echo "  make demo     - Run the atomic swap demonstration (with partial fulfillment)"
-	@echo "  make demo-real - Run demo with real blockchain transactions"
-	@echo "  make test-complete-swap - Test complete atomic swap functionality"
-	@echo "  make clean    - Stop all services and clean up"
-	@echo "  make restart  - Clean and start fresh"
+	@echo "$(GREEN)⚡ Thunder Portal Commands:$(NC)"
 	@echo ""
-	@echo "$(YELLOW)Quick start: make setup && make start && make demo$(NC)"
+	@echo "$(YELLOW)Quick Start:$(NC)"
+	@echo "  make thunder  - One-command setup + start + CLI demo"
+	@echo ""
+	@echo "$(CYAN)Basic Commands:$(NC)"
+	@echo "  make setup    - Install all dependencies"
+	@echo "  make start    - Start all services (Bitcoin, Ethereum, Backend)"
+	@echo "  make stop     - Stop all services"
+	@echo "  make clean    - Clean everything and reset"
+	@echo "  make restart  - Stop, clean, and start fresh"
+	@echo ""
+	@echo "$(CYAN)Thunder CLI:$(NC)"
+	@echo "  make cli      - Run Thunder CLI (production mode)"
+	@echo "  make cli-demo - Run Thunder CLI in demo mode"
+	@echo "  make cli-judge - Special demo for hackathon judges"
+	@echo ""
+	@echo "$(CYAN)Testing:$(NC)"
+	@echo "  make test-contracts - Test smart contracts"
+	@echo "  make test-swap - Test complete swap flow"
+	@echo ""
+	@echo "$(YELLOW)Recommended: make thunder$(NC)"
 
 # Setup dependencies and environment
 setup:
@@ -32,9 +44,12 @@ setup:
 	@cd evm-resolver && npm install
 	@cd relayer && npm install
 	@cd resolver && npm install
+	@cd thunder-cli && npm install
 	@echo "2️⃣  Building Bitcoin HTLC service..."
 	@cd bitcoin-htlc && cargo build --release
-	@echo "3️⃣  Creating necessary directories..."
+	@echo "3️⃣  Building Thunder CLI..."
+	@cd thunder-cli && npm run build
+	@echo "4️⃣  Creating necessary directories..."
 	@mkdir -p logs data/bitcoin/regtest
 	@echo "$(GREEN)✅ Setup complete!$(NC)"
 
@@ -157,11 +172,7 @@ test-contracts:
 	@echo "$(YELLOW)Testing smart contracts...$(NC)"
 	@cd evm-resolver && forge test -vv
 
-# Thunder CLI
-cli-demo:
-	@echo "$(YELLOW)⚡ Starting Thunder Portal CLI Demo...$(NC)"
-	@cd thunder-cli && npm run demo
-
+# Thunder CLI build command
 cli-build:
 	@echo "$(YELLOW)Building Thunder Portal CLI...$(NC)"
 	@cd thunder-cli && npm install && npm run build
@@ -173,4 +184,26 @@ cli-install:
 test-complete-swap:
 	@echo "$(YELLOW)Testing complete atomic swap functionality...$(NC)"
 	@node scripts/test-complete-swap.js
+
+# Thunder CLI commands
+cli: cli-build
+	@echo "$(YELLOW)⚡ Starting Thunder Portal CLI...$(NC)"
+	@echo "Make sure services are running with: make start"
+	@cd thunder-cli && node dist/cli.js
+
+cli-demo: cli-build
+	@echo "$(YELLOW)⚡ Starting Thunder Portal CLI in demo mode...$(NC)"
+	@echo "$(GREEN)Demo mode uses test networks but real service connections$(NC)"
+	@cd thunder-cli && node dist/cli.js --demo
+
+cli-judge: cli-build
+	@echo "$(YELLOW)⚡ Running Thunder Portal CLI Demo for Judges...$(NC)"
+	@cd thunder-cli && ./demo-judge.sh
+
+# Quick command to start everything and run CLI
+thunder: setup start
+	@echo "$(YELLOW)⚡ Thunder Portal is ready!$(NC)"
+	@echo "Starting CLI in 5 seconds..."
+	@sleep 5
+	@make cli-demo
 

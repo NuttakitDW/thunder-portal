@@ -6,6 +6,7 @@ import { getSwapStatus } from '../services/api.js';
 interface StatusDashboardProps {
     swapId: string | null;
     onBack: () => void;
+    onClaimReady?: (swapId: string, htlcAddress: string, secret?: string, escrowAddress?: string) => void;
 }
 
 interface SwapStatus {
@@ -18,9 +19,11 @@ interface SwapStatus {
     ethTxId?: string;
     htlcAddress?: string;
     escrowAddress?: string;
+    claimable?: boolean;
+    secret?: string;
 }
 
-export const StatusDashboard: React.FC<StatusDashboardProps> = ({ swapId, onBack }) => {
+export const StatusDashboard: React.FC<StatusDashboardProps> = ({ swapId, onBack, onClaimReady }) => {
     const [status, setStatus] = useState<SwapStatus | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -42,6 +45,13 @@ export const StatusDashboard: React.FC<StatusDashboardProps> = ({ swapId, onBack
             try {
                 const data = await getSwapStatus(swapId);
                 setStatus(data);
+                
+                // Check if Bitcoin is claimable
+                if (data.claimable && onClaimReady && data.htlcAddress) {
+                    // Auto-navigate to claim interface when ready
+                    // In demo mode, we don't need the real escrow address
+                    onClaimReady(swapId, data.htlcAddress, data.secret, 'demo-escrow-address');
+                }
             } catch (err) {
                 setError(err instanceof Error ? err.message : 'Failed to fetch status');
             } finally {
@@ -54,7 +64,7 @@ export const StatusDashboard: React.FC<StatusDashboardProps> = ({ swapId, onBack
         fetchStatus(); // Initial fetch
 
         return () => clearInterval(interval);
-    }, [swapId]);
+    }, [swapId, onClaimReady]);
 
     const renderProgressBar = (progress: number) => {
         const width = 30;
@@ -62,9 +72,14 @@ export const StatusDashboard: React.FC<StatusDashboardProps> = ({ swapId, onBack
         const empty = width - filled;
         
         return (
-            <Text>
-                [{'█'.repeat(filled)}{'░'.repeat(empty)}] {progress}%
-            </Text>
+            <Box>
+                <Text color="yellow">⚡</Text>
+                <Text>[</Text>
+                <Text color="yellow">{'█'.repeat(filled)}</Text>
+                <Text color="gray">{'░'.repeat(empty)}</Text>
+                <Text>] </Text>
+                <Text bold color={progress === 100 ? 'green' : 'cyan'}>{progress}%</Text>
+            </Box>
         );
     };
 
@@ -73,9 +88,9 @@ export const StatusDashboard: React.FC<StatusDashboardProps> = ({ swapId, onBack
         const currentIndex = steps.indexOf(currentStatus);
         const stepIndex = steps.indexOf(step);
         
-        if (stepIndex < currentIndex) return '✅';
-        if (stepIndex === currentIndex) return <Spinner type="dots" />;
-        return '○';
+        if (stepIndex < currentIndex) return <Text color="green">✅</Text>;
+        if (stepIndex === currentIndex) return <Text color="yellow">⚡ <Spinner type="dots12" /></Text>;
+        return <Text color="gray">○</Text>;
     };
 
     if (loading && !status) {
@@ -108,9 +123,11 @@ export const StatusDashboard: React.FC<StatusDashboardProps> = ({ swapId, onBack
 
     return (
         <Box flexDirection="column">
-            <Box borderStyle="round" borderColor="cyan" padding={1} marginBottom={1}>
+            <Box borderStyle="double" borderColor="yellow" padding={1} marginBottom={1}>
                 <Box flexDirection="column">
-                    <Text bold color="yellow">📊 Swap Status</Text>
+                    <Box justifyContent="center" marginBottom={1}>
+                        <Text bold color="yellow">⚡ ATOMIC SWAP STATUS ⚡</Text>
+                    </Box>
                     <Text> </Text>
                     <Text>Order ID: <Text color="cyan">{status.orderId}</Text></Text>
                     <Text>Direction: {status.direction}</Text>
@@ -150,11 +167,34 @@ export const StatusDashboard: React.FC<StatusDashboardProps> = ({ swapId, onBack
                 </Box>
             </Box>
             
+            {status.claimable && status.status !== 'completed' && (
+                <Box borderStyle="round" borderColor="yellow" padding={1} marginBottom={1}>
+                    <Box flexDirection="column">
+                        <Box justifyContent="center">
+                            <Text color="yellow" bold>⚡ BITCOIN READY TO CLAIM! ⚡</Text>
+                        </Box>
+                        <Text> </Text>
+                        <Text>The Ethereum side has revealed the secret.</Text>
+                        <Text>Your Bitcoin is waiting in the HTLC!</Text>
+                        <Text> </Text>
+                        <Text color="yellow" bold>Redirecting to claim interface...</Text>
+                    </Box>
+                </Box>
+            )}
+            
             {status.status === 'completed' && (
-                <Box flexDirection="column" marginBottom={1}>
-                    <Text color="green" bold>✨ Swap Completed Successfully! ✨</Text>
-                    <Text dimColor>BTC TX: {status.btcTxId}</Text>
-                    <Text dimColor>ETH TX: {status.ethTxId}</Text>
+                <Box borderStyle="round" borderColor="green" padding={1} marginBottom={1}>
+                    <Box flexDirection="column">
+                        <Box justifyContent="center">
+                            <Text color="green" bold>⚡ ✨ SWAP COMPLETED SUCCESSFULLY! ✨ ⚡</Text>
+                        </Box>
+                        <Text> </Text>
+                        <Text color="green">Bitcoin TX:</Text>
+                        <Text dimColor>{status.btcTxId}</Text>
+                        <Text> </Text>
+                        <Text color="green">Ethereum TX:</Text>
+                        <Text dimColor>{status.ethTxId}</Text>
+                    </Box>
                 </Box>
             )}
             

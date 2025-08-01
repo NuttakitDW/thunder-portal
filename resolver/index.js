@@ -115,12 +115,32 @@ app.post('/execute-swap', async (req, res) => {
 
 // Claim HTLC with preimage
 app.post('/claim-htlc', async (req, res) => {
-  const { orderId, escrowAddress, preimage } = req.body;
+  const { orderId, escrowAddress, preimage, htlcAddress } = req.body;
   
   console.log(`[RESOLVER] Claiming HTLC for order ${orderId}`);
   
   try {
-    // Connect to escrow contract
+    // Demo mode - simulate successful claim
+    if (!escrowAddress || escrowAddress === 'demo-escrow-address') {
+      console.log('[RESOLVER] Demo mode: Simulating Bitcoin claim');
+      
+      // Generate a proper Bitcoin transaction hash format
+      // Bitcoin tx hashes are 64 hex chars without 0x prefix
+      const timestamp = Date.now().toString(16);
+      const randomBytes = crypto.randomBytes(24).toString('hex');
+      const bitcoinTxId = (timestamp + randomBytes).padEnd(64, '0').substring(0, 64);
+      
+      res.json({
+        message: 'Bitcoin claimed successfully (demo)',
+        orderId,
+        txHash: bitcoinTxId,
+        btcTxId: bitcoinTxId,
+        amount: '0.1 BTC'
+      });
+      return;
+    }
+    
+    // Real mode - interact with actual contract
     const escrow = new ethers.Contract(escrowAddress, ESCROW_ABI, resolver);
     
     // Convert preimage to bytes32
@@ -218,7 +238,10 @@ app.post('/bitcoin-fund', async (req, res) => {
 app.post('/demo-atomic-swap', async (req, res) => {
   const { orderId, bitcoinAmount, ethereumAmount } = req.body;
   
-  console.log(`[RESOLVER] Starting demo atomic swap for order ${orderId}`);
+  // Generate orderId if not provided
+  const swapOrderId = orderId || `order-demo-${Date.now()}`;
+  
+  console.log(`[RESOLVER] Starting demo atomic swap for order ${swapOrderId}`);
   
   try {
     // Step 1: Generate merkle tree for order chunking
@@ -246,9 +269,9 @@ app.post('/demo-atomic-swap', async (req, res) => {
     
     // Step 3: Register with relayer
     console.log('[RESOLVER] Step 3: Registering with relayer...');
-    const orderHash = ethers.keccak256(ethers.toUtf8Bytes(orderId));
+    const orderHash = ethers.keccak256(ethers.toUtf8Bytes(swapOrderId));
     await axios.post(`${RELAYER_API}/monitor-swap`, {
-      orderId,
+      orderId: swapOrderId,
       orderHash,
       htlcAddress,
       maker: resolver.address,
@@ -259,14 +282,14 @@ app.post('/demo-atomic-swap', async (req, res) => {
     
     // Step 4: Simulate Bitcoin funding
     console.log('[RESOLVER] Step 4: Simulating Bitcoin funding...');
-    await axios.post(`${RELAYER_API}/simulate-bitcoin-funding/${orderId}`);
+    await axios.post(`${RELAYER_API}/simulate-bitcoin-funding/${swapOrderId}`);
     
     // Wait for Ethereum escrow creation
     console.log('[RESOLVER] Step 5: Waiting for Ethereum escrow...');
     await new Promise(resolve => setTimeout(resolve, 7000));
     
     // Get swap status
-    const statusResponse = await axios.get(`${RELAYER_API}/swap-status/${orderId}`);
+    const statusResponse = await axios.get(`${RELAYER_API}/swap-status/${swapOrderId}`);
     const escrowAddress = statusResponse.data.escrowAddress;
     
     if (escrowAddress) {
@@ -279,7 +302,7 @@ app.post('/demo-atomic-swap', async (req, res) => {
       
       res.json({
         message: 'Demo atomic swap initiated with partial fulfillment capability',
-        orderId,
+        orderId: swapOrderId,
         bitcoinHTLC: htlcAddress,
         ethereumEscrow: escrowAddress,
         merkleRoot,

@@ -10,19 +10,19 @@ interface MainMenuProps {
 export const MainMenu: React.FC<MainMenuProps> = ({ onSelect }) => {
     const items = [
         {
-            label: '💰 Check Balances',
+            label: '⚡ 💰 Check Balances',
             value: 'balance' as Screen
         },
         {
-            label: '🔄 Create Atomic Swap',
+            label: '⚡ 🔄 Create Atomic Swap',
             value: 'swap' as Screen
         },
         {
-            label: '📊 Active Swaps Status',
+            label: '⚡ 📊 Active Swaps Status',
             value: 'status' as Screen
         },
         {
-            label: '📜 Swap History',
+            label: '⚡ 📜 Swap History',
             value: 'history' as Screen
         }
     ];
@@ -33,12 +33,16 @@ export const MainMenu: React.FC<MainMenuProps> = ({ onSelect }) => {
 
     return (
         <Box flexDirection="column">
-            <Box marginY={1}>
-                <Text bold color="cyan">Main Menu</Text>
+            <Box borderStyle="round" borderColor="yellow" padding={1} marginBottom={1}>
+                <Box flexDirection="column">
+                    <Box justifyContent="center" marginBottom={1}>
+                        <Text bold color="yellow">⚡ THUNDER PORTAL MENU ⚡</Text>
+                    </Box>
+                    <SelectInput items={items} onSelect={handleSelect} />
+                </Box>
             </Box>
-            <SelectInput items={items} onSelect={handleSelect} />
-            <Box marginTop={2}>
-                <Text dimColor>Use arrow keys to navigate, Enter to select</Text>
+            <Box justifyContent="center">
+                <Text dimColor>[↑↓] Navigate  [⏎] Select  [q] Quit</Text>
             </Box>
         </Box>
     );
