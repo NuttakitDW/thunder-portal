@@ -24,7 +24,14 @@ setup:
 
 # Build the project
 build:
-	cargo build --release
+	@if [ -d ".sqlx" ] && [ "$$(ls -A .sqlx)" ]; then \
+		echo "Building with SQLx offline mode..."; \
+		export DATABASE_URL="sqlite:./thunder_portal.db"; \
+		cargo build --release; \
+	else \
+		echo "No SQLx cache found. Running setup first..."; \
+		./setup.sh && cargo build --release; \
+	fi
 
 # Run the service
 run:
