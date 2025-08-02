@@ -1,0 +1,13 @@
+{
+  "bitcoin": {
+    "maker": "tb1qthmpa24ghlyfcx654ahr65we2fry285jmxnd87",
+    "resolver": "tb1qh3kya4ejyypt8e29kz2v6jfzxw9mxwuvv8xdut",
+    "taker": "tb1qavrzvqd36gumpe42dm6nsjfphmefs0appcufya"
+  },
+  "ethereum": {
+    "maker": "0x36c147F1C7CC81a53DE10F190bac157988c5A175",
+    "resolver": "0xF79e5800150C8DFB3730C9Da17a157dD9D53E6db",
+    "taker": "0x4cDe35b45BE7E9982c51B5c2F44b79d0078D85BE"
+  },
+  "timestamp": "2025-08-02T08:47:18.149Z"
+}

@@ -71,4 +71,8 @@ data/bitcoin/
 data/ethereum/
 data/postgres/
 
+# Testnet wallets (SENSITIVE - DO NOT COMMIT)
+doc/testnet-wallets/wallets-sensitive.json
+doc/testnet-wallets/.env.testnet
+
 .claude

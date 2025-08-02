@@ -30,8 +30,13 @@
   },
   "dependencies": {
     "axios": "^1.6.0",
+    "bip32": "^5.0.0-rc.0",
+    "bip39": "^3.1.0",
+    "bitcoinjs-lib": "^6.1.7",
     "dotenv": "^16.3.1",
-    "ethers": "^6.9.0"
+    "ecpair": "^3.0.0",
+    "ethers": "^5.8.0",
+    "tiny-secp256k1": "^2.2.4"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^4.0.0",

@@ -34,24 +34,20 @@
 ### Phase 2: Testnet Configuration (2-3 hours) - CRITICAL PATH
 **Priority: HIGH - Required for hackathon demo**
 
-#### 2.1 Wallet Setup and Funding (30 min) - NEW SECTION
+#### 2.1 Wallet Setup and Funding (30 min) - COMPLETED ✅
 **Total Wallets Required: 8 (4 Bitcoin testnet3, 4 Ethereum Sepolia)**
 
-**Bitcoin Testnet3 Wallets:**
-- [ ] **Maker Wallet** - User sending BTC (fund with 0.1-1 BTC)
-- [ ] **Resolver Service Wallet** - Liquidity provider (fund with 1-5 BTC)
-- [ ] **HTLC Escrow Address** - Derived P2WSH address for atomic locking
-- [ ] **Taker Wallet** - User receiving BTC (no initial funding needed)
+**Wallets Generated and Documented:**
+- [x] All 8 testnet wallets generated with seed phrases
+- [x] Complete documentation created at `doc/testnet-wallets/WALLETS-COMPLETE.md`
+- [x] Environment file `.env.testnet` ready for configuration
+- [ ] Fund wallets using testnet faucets (see complete details in wallet docs)
 
-**Ethereum Sepolia Wallets:**
-- [ ] **Maker Wallet** - User receiving ETH (fund with 0.1 ETH for gas)
-- [ ] **Resolver Service Wallet** - Liquidity provider (fund with 5-10 ETH)
-- [ ] **Escrow Contract** - Smart contract address (deployed by factory)
-- [ ] **Taker Wallet** - User sending ETH (fund with 1-5 ETH)
-
-**Funding Sources:**
-- Bitcoin Testnet3: https://coinfaucet.eu/en/btc-testnet/, https://bitcoinfaucet.uo1.net/
-- Ethereum Sepolia: https://sepoliafaucet.com/, https://sepolia-faucet.pk910.de/
+**Key Addresses:**
+- Bitcoin Maker: `tb1qthmpa24ghlyfcx654ahr65we2fry285jmxnd87`
+- Bitcoin Resolver: `tb1qh3kya4ejyypt8e29kz2v6jfzxw9mxwuvv8xdut`
+- Ethereum Resolver: `0xF79e5800150C8DFB3730C9Da17a157dD9D53E6db`
+- See `doc/testnet-wallets/WALLETS-COMPLETE.md` for all details
 
 #### 2.2 Bitcoin Testnet Integration (1 hour)
 - [ ] Configure Bitcoin HTLC service for testnet3 RPC endpoints
