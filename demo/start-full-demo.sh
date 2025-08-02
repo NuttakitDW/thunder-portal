@@ -43,19 +43,48 @@ else
     cd "$PROJECT_ROOT/evm-resolver"
     npx hardhat node > ../logs/hardhat.log 2>&1 &
     HARDHAT_PID=$!
-    sleep 5
+    # Wait for Hardhat to be fully ready
+    echo -n "Waiting for Hardhat to start..."
+    for i in {1..30}; do
+        if curl -s -X POST http://localhost:8545 \
+            -H "Content-Type: application/json" \
+            -d '{"jsonrpc":"2.0","method":"eth_blockNumber","params":[],"id":1}' > /dev/null 2>&1; then
+            echo -e " ${GREEN}Ready!${NC}"
+            break
+        fi
+        echo -n "."
+        sleep 1
+    done
+    if ! curl -s http://localhost:8545 > /dev/null 2>&1; then
+        echo -e " ${RED}Failed to start!${NC}"
+        exit 1
+    fi
 fi
 
 # 3. Check/Start Bitcoin HTLC API
 echo -e "\n${BLUE}3. Bitcoin HTLC API${NC}"
-if curl -s http://localhost:3000/health > /dev/null 2>&1; then
+if curl -s http://localhost:3000/v1/health > /dev/null 2>&1; then
     echo -e "${GREEN}✅ Already running${NC}"
 else
     echo "Starting Bitcoin HTLC API..."
     cd "$PROJECT_ROOT/bitcoin-htlc"
     cargo run --release > ../logs/bitcoin-htlc.log 2>&1 &
     HTLC_PID=$!
-    sleep 5
+    # Wait for HTLC API to be ready
+    echo -n "Waiting for Bitcoin HTLC API..."
+    for i in {1..60}; do
+        if curl -s http://localhost:3000/v1/health > /dev/null 2>&1; then
+            echo -e " ${GREEN}Ready!${NC}"
+            break
+        fi
+        echo -n "."
+        sleep 1
+    done
+    if ! curl -s http://localhost:3000/v1/health > /dev/null 2>&1; then
+        echo -e " ${RED}Failed to start!${NC}"
+        echo "Check logs at: $PROJECT_ROOT/logs/bitcoin-htlc.log"
+        exit 1
+    fi
 fi
 
 # 4. Install and start Relayer

@@ -56,12 +56,18 @@ start:
 	@sleep 5
 	@echo ""
 	@echo "$(YELLOW)📜 Deploying smart contracts...$(NC)"
+	@# Wait a bit more to ensure Ethereum is fully ready
+	@sleep 3
 	@echo "1️⃣  Deploying 1inch Limit Order Protocol..."
-	@npx hardhat run scripts/deploy-limit-order-protocol.js --network localhost 2>&1 | grep -E "(deployed to:|✅)" || true
+	@cd evm-resolver && npx hardhat run ../scripts/deploy-limit-order-protocol.js --network localhost || (echo "$(RED)Failed to deploy Limit Order Protocol$(NC)" && exit 1)
 	@echo "2️⃣  Deploying SimpleEscrowFactory contract..."
-	@npx hardhat run scripts/deploy-simple-escrow-factory.js --network localhost 2>&1 | grep -E "(deployed to:|✅)" || true
+	@cd evm-resolver && npx hardhat run ../scripts/deploy-simple-escrow-factory.js --network localhost || (echo "$(RED)Failed to deploy SimpleEscrowFactory$(NC)" && exit 1)
 	@echo "3️⃣  Deploying Thunder Portal contracts..."
-	@cd evm-resolver && ./scripts/deploy-with-forge.sh 2>&1 | grep -E "(deployed to:|✅)" || true
+	@if command -v forge >/dev/null 2>&1; then \
+		cd evm-resolver && ./scripts/deploy-with-forge.sh || echo "$(YELLOW)Forge deployment skipped$(NC)"; \
+	else \
+		echo "$(YELLOW)Forge not found, skipping Thunder Portal contracts$(NC)"; \
+	fi
 	@echo ""
 	@echo "$(YELLOW)🔄 Restarting services with new contract...$(NC)"
 	@lsof -ti:3001 | xargs kill -9 2>/dev/null || true
