@@ -41,7 +41,7 @@
 - [x] All 8 testnet wallets generated with seed phrases
 - [x] Complete documentation created at `doc/testnet-wallets/WALLETS-COMPLETE.md`
 - [x] Environment file `.env.testnet` ready for configuration
-- [ ] Fund wallets using testnet faucets (see complete details in wallet docs)
+- [x] Fund wallets using testnet faucets (see complete details in wallet docs)
 
 **Key Addresses:**
 - Bitcoin Maker: `tb1qthmpa24ghlyfcx654ahr65we2fry285jmxnd87`
@@ -129,9 +129,9 @@ ETH_SEPOLIA_RPC=https://sepolia.infura.io/v3/<API_KEY>
 3. **Taker completes swap**: Sends ETH, claims BTC with preimage
 4. **Atomic completion**: Both sides finalize with same secret
 
-### Total Funding Requirements
-- **Bitcoin Testnet3**: ~6-11 BTC total
-- **Ethereum Sepolia**: ~6.6-15.6 ETH total
+### Total Funding Requirements (Minimal Demo)
+- **Bitcoin Testnet3**: ~0.011 BTC total (easily obtainable from faucets)
+- **Ethereum Sepolia**: ~0.7-1.6 ETH total (1-3 faucet requests)
 
 ## Risk Mitigation
 

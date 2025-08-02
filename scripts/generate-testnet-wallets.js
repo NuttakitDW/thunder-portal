@@ -49,7 +49,7 @@ async function generateWallets() {
         address: btcMakerP2wpkh.address,
         privateKey: btcMakerChild.toWIF(),
         publicKey: btcMakerChild.publicKey.toString('hex'),
-        role: 'User sending BTC, needs 0.1-1 BTC funding'
+        role: 'User sending BTC, needs 0.001 BTC funding'
     };
     
     console.log('\n1. Maker Wallet (BTC Sender)');
@@ -73,7 +73,7 @@ async function generateWallets() {
         address: btcResolverP2wpkh.address,
         privateKey: btcResolverChild.toWIF(),
         publicKey: btcResolverChild.publicKey.toString('hex'),
-        role: 'Liquidity provider, needs 1-5 BTC funding'
+        role: 'Liquidity provider, needs 0.01 BTC funding'
     };
     
     console.log('\n2. Resolver Service Wallet (BTC Liquidity)');
@@ -140,7 +140,7 @@ async function generateWallets() {
         address: ethResolverWallet.address,
         privateKey: ethResolverWallet.privateKey,
         publicKey: ethResolverWallet.publicKey,
-        role: 'Liquidity provider & contract deployer, needs 5-10 ETH'
+        role: 'Liquidity provider & contract deployer, needs 0.5-1 ETH'
     };
     
     console.log('\n2. Resolver Service Wallet (ETH Liquidity)');
@@ -157,7 +157,7 @@ async function generateWallets() {
         address: ethTakerWallet.address,
         privateKey: ethTakerWallet.privateKey,
         publicKey: ethTakerWallet.publicKey,
-        role: 'User sending ETH, needs 1-5 ETH funding'
+        role: 'User sending ETH, needs 0.1-0.5 ETH funding'
     };
     
     console.log('\n3. Taker Wallet (ETH Sender)');

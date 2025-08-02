@@ -12,8 +12,8 @@ This directory contains the wallet information for Thunder Portal's cross-chain 
 
 | Wallet Type | Address | Funding Required | Purpose |
 |------------|---------|------------------|---------|
-| **Maker** | `tb1qthmpa24ghlyfcx654ahr65we2fry285jmxnd87` | 0.1-1 BTC | User sending BTC in swap |
-| **Resolver Service** | `tb1qh3kya4ejyypt8e29kz2v6jfzxw9mxwuvv8xdut` | 1-5 BTC | Liquidity provider |
+| **Maker** | `tb1qthmpa24ghlyfcx654ahr65we2fry285jmxnd87` | 0.001 BTC | User sending BTC in swap |
+| **Resolver Service** | `tb1qh3kya4ejyypt8e29kz2v6jfzxw9mxwuvv8xdut` | 0.01 BTC | Liquidity provider |
 | **Taker** | `tb1qavrzvqd36gumpe42dm6nsjfphmefs0appcufya` | None | User receiving BTC |
 | **HTLC Escrow** | *Generated per swap* | N/A | P2WSH script address |
 
@@ -22,8 +22,8 @@ This directory contains the wallet information for Thunder Portal's cross-chain 
 | Wallet Type | Address | Funding Required | Purpose |
 |------------|---------|------------------|---------|
 | **Maker** | `0x36c147F1C7CC81a53DE10F190bac157988c5A175` | 0.1 ETH | User receiving ETH (gas only) |
-| **Resolver Service** | `0xF79e5800150C8DFB3730C9Da17a157dD9D53E6db` | 5-10 ETH | Liquidity provider & deployer |
-| **Taker** | `0x4cDe35b45BE7E9982c51B5c2F44b79d0078D85BE` | 1-5 ETH | User sending ETH |
+| **Resolver Service** | `0xF79e5800150C8DFB3730C9Da17a157dD9D53E6db` | 0.5-1 ETH | Liquidity provider & deployer |
+| **Taker** | `0x4cDe35b45BE7E9982c51B5c2F44b79d0078D85BE` | 0.1-0.5 ETH | User sending ETH |
 | **Escrow Contract** | *Deployed by factory* | N/A | Smart contract address |
 
 ## 🔄 Swap Flow Architecture
@@ -40,9 +40,9 @@ graph LR
 
 ## 💰 Funding Instructions
 
-### Total Required Funds
-- **Bitcoin testnet3**: ~6-11 BTC total
-- **Ethereum Sepolia**: ~6.6-15.6 ETH total
+### Total Required Funds (Minimal Demo)
+- **Bitcoin testnet3**: ~0.011 BTC total (easily obtainable from faucets)
+- **Ethereum Sepolia**: ~0.7-1.6 ETH total (1-3 faucet requests)
 
 ### Testnet Faucets
 

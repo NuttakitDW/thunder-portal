@@ -29,6 +29,7 @@ help:
 	@echo "  make restart      - Stop, clean, and start fresh"
 	@echo "  make status       - Check service status"
 	@echo "  make logs         - View service logs"
+	@echo "  make balances - Check all testnet wallet balances"
 
 # Setup dependencies and environment
 setup:
@@ -181,4 +182,9 @@ swap-testnet:
 	@echo "This feature is being implemented. Check doc/plan.md for progress."
 	@# TODO: Implement real testnet swap
 	@# ./scripts/swap-testnet.sh
+
+# Check all testnet wallet balances
+balances:
+	@echo "$(YELLOW)💰 Checking Thunder Portal testnet wallet balances...$(NC)"
+	@node scripts/check-testnet-balances.js
 

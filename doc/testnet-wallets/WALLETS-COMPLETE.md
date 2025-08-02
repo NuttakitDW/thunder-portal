@@ -24,7 +24,7 @@ make swap-testnet
 - **Private Key**: `cSKLGgedNWc2VfxHWUn7ktfJfgtYUM1BC1JhCc3vdPYzeVd3QtwB`
 - **Mnemonic**: `banana soon video try hip affair move hub blast forget punch alpha category either sword unique become pepper actual scorpion spread ethics scatter junk`
 - **Derivation Path**: `m/84'/1'/0'/0/0`
-- **Funding Required**: 0.1-1 BTC
+- **Funding Required**: 0.001 BTC (minimal for demo)
 - **Purpose**: User initiating the swap by sending BTC
 
 #### 2. Resolver Service Wallet (BTC Liquidity Provider)
@@ -32,7 +32,7 @@ make swap-testnet
 - **Private Key**: `cMmu6yzZUQp1qnNwjTiYg37Wr9LcBpDj9eQJpUcisvyLVQWknEvJ`
 - **Mnemonic**: `spot fog access danger bubble upper valid castle liquid silk carpet bleak flash advice sorry mirror vast access boost snap squeeze surge similar ankle`
 - **Derivation Path**: `m/84'/1'/0'/0/0`
-- **Funding Required**: 1-5 BTC
+- **Funding Required**: 0.01 BTC (minimal for demo)
 - **Purpose**: Provides Bitcoin liquidity for swaps
 
 #### 3. Taker Wallet (User Receiving BTC)
@@ -58,7 +58,7 @@ make swap-testnet
 - **Private Key**: `0x10d9248835570af19b9ad9dc4835ae6a57a8c2509c119257344d39b9dfa954bc`
 - **Mnemonic**: `call april still fiber talk beach theme frost cake alpha obscure afford`
 - **Derivation Path**: `m/44'/60'/0'/0/0`
-- **Funding Required**: 5-10 ETH
+- **Funding Required**: 0.5-1 ETH (minimal for demo)
 - **Purpose**: Provides ETH liquidity and deploys escrow contracts
 
 #### 3. Taker Wallet (User Sending ETH)
@@ -66,21 +66,21 @@ make swap-testnet
 - **Private Key**: `0xc3b01acd8fdc2cd3bcc74fe7d7a0d5d080ec1059caf5f7dfd413176a1e89e3dd`
 - **Mnemonic**: `uncle aspect bleak mind damage twenty fortune shift bundle pact demand off`
 - **Derivation Path**: `m/44'/60'/0'/0/0`
-- **Funding Required**: 1-5 ETH
+- **Funding Required**: 0.1-0.5 ETH (minimal for demo)
 - **Purpose**: User initiating ETH side of the swap
 
 ## 💰 Funding Summary
 
-### Total Required:
-- **Bitcoin testnet3**: ~6-11 BTC
-- **Ethereum Sepolia**: ~6.6-15.6 ETH
+### Total Required (Minimal Demo):
+- **Bitcoin testnet3**: ~0.011 BTC (0.001 + 0.01)
+- **Ethereum Sepolia**: ~0.7-1.6 ETH (0.1 + 0.5-1 + 0.1-0.5)
 
 ### Priority Funding Order:
-1. **Bitcoin Resolver**: 1-5 BTC (most important)
-2. **Ethereum Resolver**: 5-10 ETH (most important)
-3. **Bitcoin Maker**: 0.1-1 BTC
-4. **Ethereum Taker**: 1-5 ETH
-5. **Ethereum Maker**: 0.1 ETH (gas only)
+1. **Bitcoin Resolver**: 0.01 BTC (most important)
+2. **Ethereum Resolver**: 0.5-1 ETH (most important)
+3. **Bitcoin Maker**: 0.001 BTC
+4. **Ethereum Taker**: 0.1-0.5 ETH
+5. **Ethereum Maker**: 0.1 ETH (already funded! ✅)
 
 ## 🔗 Testnet Faucets
 
@@ -97,9 +97,9 @@ make swap-testnet
 ## 🔄 Swap Flow Demonstration
 
 ```
-1. User A (Maker) wants to swap 0.1 BTC for ETH
-2. User A locks 0.1 BTC in HTLC (Bitcoin testnet3)
-3. Resolver provides 0.1 BTC worth of ETH on Sepolia
+1. User A (Maker) wants to swap 0.001 BTC for ETH
+2. User A locks 0.001 BTC in HTLC (Bitcoin testnet3)
+3. Resolver provides 0.001 BTC worth of ETH on Sepolia
 4. User B (Taker) sends ETH to claim the BTC
 5. Secret is revealed, completing the atomic swap
 6. User A receives ETH, User B receives BTC

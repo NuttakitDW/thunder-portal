@@ -29,7 +29,7 @@
     "logs:production": "docker-compose -f docker-compose.production.yml logs -f"
   },
   "dependencies": {
-    "axios": "^1.6.0",
+    "axios": "^1.11.0",
     "bip32": "^5.0.0-rc.0",
     "bip39": "^3.1.0",
     "bitcoinjs-lib": "^6.1.7",
