@@ -1,12 +1,12 @@
 {
   "network": "localhost",
-  "timestamp": "2025-08-02T07:37:14.747Z",
-  "blockNumber": 31,
+  "timestamp": "2025-08-02T07:55:51.229Z",
+  "blockNumber": 37,
   "contracts": {
     "SimpleEscrowFactory": {
-      "address": "0xE6E340D132b5f46d1e472DebcD681B2aBc16e57E",
+      "address": "0x1613beB3B2C4f22Ee086B2b38C1476A3cE7f78E8",
       "deployer": "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
-      "deploymentTx": "0x521a82423647944b98e529f053387518b81ff8cdfaf9e22738736d9b923a0e7f"
+      "deploymentTx": "0x14bb50942df0c0384d653cf361bef773cf3a96678aa6be47b5051421c13dd8da"
     }
   },
   "gasUsed": {

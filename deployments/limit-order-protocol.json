@@ -1,8 +1,8 @@
 {
   "network": "localhost",
   "chainId": 31337,
-  "limitOrderProtocol": "0x67d269191c92Caf3cD7723F116c85e6E9bf55933",
-  "weth": "0xc5a5C42992dECbae36851359345FE25997F5C42d",
+  "limitOrderProtocol": "0xa82fF9aFd8f496c3d6ac40E2a0F282E47488CFc9",
+  "weth": "0x9E545E3C0baAB3E08CdfD552C960A1050f373042",
   "deployer": "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
-  "timestamp": "2025-08-02T07:37:14.350Z"
+  "timestamp": "2025-08-02T07:55:50.825Z"
 }
