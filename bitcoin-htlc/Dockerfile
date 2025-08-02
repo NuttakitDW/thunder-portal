@@ -1,16 +1,22 @@
 # Build stage
-FROM rust:1.75 as builder
+FROM rust:1.82 as builder
 
 WORKDIR /app
 
-# Copy manifests
-COPY Cargo.toml ./
+# Install dependencies for building
+RUN apt-get update && apt-get install -y \
+    pkg-config \
+    libssl-dev \
+    && rm -rf /var/lib/apt/lists/*
 
-# Build dependencies (this is cached as long as Cargo.toml doesn't change)
+# Copy manifests
+COPY Cargo.toml Cargo.lock ./
+
+# Create dummy main to cache dependencies
 RUN mkdir src && \
     echo "fn main() {}" > src/main.rs && \
-    cargo build --release && \
-    rm -rf src
+    cargo build --release || true && \
+    rm -rf src target/release/deps/thunder*
 
 # Copy source code
 COPY . .

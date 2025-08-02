@@ -1,0 +1,43 @@
+# Node modules
+node_modules/
+*/node_modules/
+**/node_modules/
+
+# Build outputs
+dist/
+build/
+target/
+*.log
+
+# Local data
+data/
+logs/
+deployments/
+
+# Git
+.git/
+.gitignore
+
+# IDE
+.vscode/
+.idea/
+
+# Cache
+cache/
+.cache/
+
+# Test files
+coverage/
+.nyc_output/
+
+# Environment files (we'll use Docker env vars)
+.env
+.env.*
+
+# Rust build artifacts (for bitcoin-htlc)
+bitcoin-htlc/target/
+bitcoin-htlc/Cargo.lock
+
+# Documentation
+*.md
+docs/

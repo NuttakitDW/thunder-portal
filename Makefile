@@ -49,105 +49,33 @@ setup:
 	@mkdir -p logs data/bitcoin/regtest
 	@echo "$(GREEN)✅ Setup complete!$(NC)"
 
-# Start all services
+# Start all services with Docker
 start:
-	@echo "$(YELLOW)🚀 Starting Thunder Portal services...$(NC)"
-	@./demo/start-full-demo.sh
-	@sleep 5
-	@echo ""
-	@echo "$(YELLOW)📜 Deploying smart contracts...$(NC)"
-	@# Wait a bit more to ensure Ethereum is fully ready
-	@sleep 3
-	@echo "1️⃣  Deploying 1inch Limit Order Protocol..."
-	@cd evm-resolver && npx hardhat run ../scripts/deploy-limit-order-protocol.js --network localhost || (echo "$(RED)Failed to deploy Limit Order Protocol$(NC)" && exit 1)
-	@echo "2️⃣  Deploying SimpleEscrowFactory contract..."
-	@cd evm-resolver && npx hardhat run ../scripts/deploy-simple-escrow-factory.js --network localhost || (echo "$(RED)Failed to deploy SimpleEscrowFactory$(NC)" && exit 1)
-	@echo "3️⃣  Deploying Thunder Portal contracts..."
-	@if command -v forge >/dev/null 2>&1; then \
-		cd evm-resolver && ./scripts/deploy-with-forge.sh || echo "$(YELLOW)Forge deployment skipped$(NC)"; \
-	else \
-		echo "$(YELLOW)Forge not found, skipping Thunder Portal contracts$(NC)"; \
-	fi
-	@echo ""
-	@echo "$(YELLOW)🔄 Restarting services with new contract...$(NC)"
-	@lsof -ti:3001 | xargs kill -9 2>/dev/null || true
-	@lsof -ti:3002 | xargs kill -9 2>/dev/null || true
-	@sleep 1
-	@cd relayer && node index.js > ../logs/relayer.log 2>&1 &
-	@cd resolver && node index.js > ../logs/resolver.log 2>&1 &
-	@sleep 3
-	@echo ""
-	@# Check if all services are actually running
-	@# Wait a moment for resolver to restart
-	@sleep 2
-	@if curl -s http://localhost:3000/v1/health > /dev/null 2>&1 && \
-	    curl -s http://localhost:3001/health > /dev/null 2>&1 && \
-	    curl -s http://localhost:3002/health > /dev/null 2>&1 && \
-	    curl -s http://localhost:8545 > /dev/null 2>&1; then \
-		echo "$(GREEN)════════════════════════════════════════════════════════════$(NC)"; \
-		echo "$(GREEN)✅ Thunder Portal is ready!$(NC)"; \
-		echo "$(GREEN)════════════════════════════════════════════════════════════$(NC)"; \
-		echo ""; \
-		echo "$(YELLOW)Contracts deployed:$(NC)"; \
-		echo "  • Limit Order Protocol: $(GREEN)$$(cat deployments/limit-order-protocol.json 2>/dev/null | jq -r '.limitOrderProtocol' || echo "Check deployment")$(NC)"; \
-		echo "  • Simple Escrow Factory: $(GREEN)$$(cat deployments/simple-escrow-factory.json 2>/dev/null | jq -r '.contracts.SimpleEscrowFactory.address' || echo "Check deployment")$(NC)"; \
-		echo "  • Cross-Chain Factory:   $(GREEN)$$(cat evm-resolver/deployments/simple-escrow-factory-local.json 2>/dev/null | grep -o '"address": "[^"]*"' | head -1 | cut -d'"' -f4 || echo "Check deployment")$(NC)"; \
-		echo ""; \
-		echo "$(YELLOW)Ready to run:$(NC)"; \
-		echo "  $(GREEN)make thunder$(NC) - Beautiful mock demo with UI"; \
-		echo "  $(GREEN)make swap-testnet$(NC) - Real blockchain swap (coming soon)"; \
-	else \
-		echo "$(RED)════════════════════════════════════════════════════════════$(NC)"; \
-		echo "$(RED)❌ Some services failed to start!$(NC)"; \
-		echo "$(RED)════════════════════════════════════════════════════════════$(NC)"; \
-		echo ""; \
-		make status; \
-		echo ""; \
-		echo "$(YELLOW)Troubleshooting:$(NC)"; \
-		echo "  1. Check logs: $(GREEN)make logs$(NC)"; \
-		echo "  2. Try restarting: $(GREEN)make restart$(NC)"; \
-		echo "  3. Check Bitcoin HTLC build: $(GREEN)cd bitcoin-htlc && cargo build --release$(NC)"; \
-		exit 1; \
-	fi
+	@echo "$(YELLOW)🚀 Starting Thunder Portal services with Docker...$(NC)"
+	@docker compose up -d --build
+	@./scripts/wait-for-services.sh
 
 # Stop all services
 stop:
 	@echo "$(YELLOW)🛑 Stopping Thunder Portal services...$(NC)"
-	@./demo/stop-all-services.sh 2>/dev/null || true
-	@pkill -f "node.*relayer" 2>/dev/null || true
-	@pkill -f "node.*resolver" 2>/dev/null || true
-	@pkill -f "hardhat node" 2>/dev/null || true
-	@pkill -f "thunder-portal" 2>/dev/null || true
-	@lsof -ti:3000-3002,8545 | xargs kill -9 2>/dev/null || true
+	@docker compose down
 	@echo "$(GREEN)✅ Services stopped$(NC)"
 
 # Stop all services and clean up
 clean:
 	@echo "$(YELLOW)🧹 Deep cleaning Thunder Portal...$(NC)"
-	@echo "1️⃣  Stopping all services..."
-	@./demo/stop-all-services.sh 2>/dev/null || true
-	@pkill -f "node.*relayer" 2>/dev/null || true
-	@pkill -f "node.*resolver" 2>/dev/null || true
-	@pkill -f "hardhat node" 2>/dev/null || true
-	@pkill -f "thunder-portal" 2>/dev/null || true
-	@lsof -ti:3000 | xargs kill -9 2>/dev/null || true
-	@lsof -ti:3001 | xargs kill -9 2>/dev/null || true
-	@lsof -ti:3002 | xargs kill -9 2>/dev/null || true
-	@lsof -ti:8545 | xargs kill -9 2>/dev/null || true
-	@echo "2️⃣  Stopping Docker containers..."
-	@docker compose down -v 2>/dev/null || docker-compose down -v 2>/dev/null || true
-	@docker rm -f thunder-bitcoin-regtest 2>/dev/null || true
+	@echo "1️⃣  Stopping Docker containers..."
+	@docker compose down -v
+	@echo "2️⃣  Removing Docker images..."
+	@docker compose rm -f
+	@docker image prune -f
 	@echo "3️⃣  Removing old data..."
 	@rm -rf data/bitcoin/regtest/* 2>/dev/null || true
 	@rm -rf logs/*.log 2>/dev/null || true
 	@rm -rf evm-resolver/cache 2>/dev/null || true
 	@rm -rf evm-resolver/dist 2>/dev/null || true
-	@rm -rf evm-resolver/deployments/*.json 2>/dev/null || true
 	@rm -rf deployments/*.json 2>/dev/null || true
 	@rm -rf bitcoin-htlc/data/*.db 2>/dev/null || true
-	@rm -f relayer/index.js.bak 2>/dev/null || true
-	@echo "4️⃣  Cleaning build artifacts..."
-	@cd bitcoin-htlc && cargo clean 2>/dev/null || true
 	@echo "$(GREEN)✅ Deep clean complete! Fresh start ready.$(NC)"
 
 # Restart everything fresh
@@ -156,32 +84,56 @@ restart: clean start
 
 # Development helpers
 logs:
-	@tail -f logs/*.log
+	@docker compose logs -f
 
 status:
 	@echo "$(YELLOW)📊 Service Status:$(NC)"
-	@curl -s http://localhost:3000/v1/health > /dev/null && echo "✅ Bitcoin HTLC API: Running" || echo "❌ Bitcoin HTLC API: Not running"
-	@curl -s http://localhost:3001/health > /dev/null && echo "✅ Relayer: Running" || echo "❌ Relayer: Not running"
-	@curl -s http://localhost:3002/health > /dev/null && echo "✅ Resolver: Running" || echo "❌ Resolver: Not running"
-	@curl -s http://localhost:8545 > /dev/null && echo "✅ Ethereum: Running" || echo "❌ Ethereum: Not running"
-	@curl -s --user thunderportal:thunderportal123 http://127.0.0.1:18443/ -X POST -d '{"method":"getblockchaininfo"}' > /dev/null 2>&1 && echo "✅ Bitcoin: Running" || echo "❌ Bitcoin: Not running"
+	@docker compose ps
+	@echo ""
+	@echo "$(YELLOW)Health Checks:$(NC)"
+	@curl -s http://localhost:3000/v1/health > /dev/null && echo "✅ Bitcoin HTLC API: Healthy" || echo "❌ Bitcoin HTLC API: Not responding"
+	@curl -s http://localhost:3001/health > /dev/null && echo "✅ Relayer: Healthy" || echo "❌ Relayer: Not responding"
+	@curl -s http://localhost:3002/health > /dev/null && echo "✅ Resolver: Healthy" || echo "❌ Resolver: Not responding"
+	@curl -s http://localhost:8545 > /dev/null && echo "✅ Ethereum: Healthy" || echo "❌ Ethereum: Not responding"
+	@curl -s --user thunderportal:thunderportal123 http://127.0.0.1:18443/ -X POST -d '{"method":"getblockchaininfo"}' > /dev/null 2>&1 && echo "✅ Bitcoin: Healthy" || echo "❌ Bitcoin: Not responding"
 
-# Main command: Beautiful mock demo with UI
-thunder: setup
-	@if command -v docker >/dev/null 2>&1 && docker compose version >/dev/null 2>&1; then \
-		echo "$(GREEN)✅ Docker detected - starting full environment$(NC)"; \
-		$(MAKE) start; \
-	elif command -v docker-compose >/dev/null 2>&1; then \
-		echo "$(GREEN)✅ Docker Compose (legacy) detected - starting full environment$(NC)"; \
-		$(MAKE) start; \
-	else \
-		echo "$(YELLOW)⚠️  Docker not found - running demo mode only$(NC)"; \
+# Main command: Beautiful mock demo with UI (Fully Dockerized)
+thunder:
+	@echo "$(YELLOW)⚡ Starting Thunder Portal with Docker...$(NC)"
+	@# Check if Docker is running
+	@if ! docker info > /dev/null 2>&1; then \
+		echo "$(RED)❌ Docker is not running. Please start Docker first.$(NC)"; \
+		exit 1; \
 	fi
-	@echo "$(YELLOW)⚡ Thunder Portal is ready!$(NC)"
-	@echo "Starting Thunder CLI demo in 5 seconds..."
+	@echo "$(GREEN)✅ Docker is running$(NC)"
+	@# Clean any problematic builds
+	@echo "$(YELLOW)🧹 Cleaning Docker build cache...$(NC)"
+	@docker compose down 2>/dev/null || true
+	@docker system prune -f
+	@# Start all services with Docker Compose
+	@echo "$(YELLOW)🚀 Starting all Thunder Portal services...$(NC)"
+	@docker compose up -d --build --force-recreate
+	@echo "$(YELLOW)⏳ Waiting for all services to be healthy...$(NC)"
+	@# Wait for all services to be healthy
+	@./scripts/wait-for-services.sh || (echo "$(RED)Services failed to start!$(NC)" && exit 1)
+	@echo "$(GREEN)✅ All services are running!$(NC)"
+	@# Show service status
+	@echo ""
+	@echo "$(GREEN)════════════════════════════════════════════════════════════$(NC)"
+	@echo "$(GREEN)✅ Thunder Portal is ready!$(NC)"
+	@echo "$(GREEN)════════════════════════════════════════════════════════════$(NC)"
+	@echo ""
+	@echo "$(YELLOW)Services running:$(NC)"
+	@echo "  • Bitcoin Regtest: http://localhost:18443"
+	@echo "  • Ethereum: http://localhost:8545"
+	@echo "  • Bitcoin HTLC API: http://localhost:3000"
+	@echo "  • Relayer: http://localhost:3001"
+	@echo "  • Resolver: http://localhost:3002"
+	@echo ""
+	@echo "$(YELLOW)Starting Thunder CLI demo in 5 seconds...$(NC)"
 	@sleep 5
-	@echo "$(YELLOW)⚡ Starting Thunder Portal CLI in demo mode...$(NC)"
-	@echo "$(GREEN)Demo mode showcases the beautiful UI with mock transactions$(NC)"
+	@# Build and run Thunder CLI locally (not in Docker for interactive mode)
+	@cd thunder-cli && npm install > /dev/null 2>&1
 	@cd thunder-cli && npm run build > /dev/null 2>&1
 	@cd thunder-cli && node dist/cli.js --demo
 
