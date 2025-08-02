@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n        INSERT INTO orders (\n            id, direction, status, preimage_hash,\n            bitcoin_amount, bitcoin_address, bitcoin_public_key,\n            ethereum_address, resolver_public_key,\n            bitcoin_timeout_blocks, ethereum_timeout_blocks,\n            bitcoin_confirmations_required, ethereum_confirmations_required,\n            created_at, updated_at, expires_at\n        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 16
+    },
+    "nullable": []
+  },
+  "hash": "249934d92e09e10798931057b968f8872c7d328e69c4f471a09a286f6ec134e7"
+}

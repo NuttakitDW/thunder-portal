@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT MAX(bitcoin_timeout_blocks) as max_timeout FROM orders",
+  "describe": {
+    "columns": [
+      {
+        "name": "max_timeout",
+        "ordinal": 0,
+        "type_info": "Int64"
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      true
+    ]
+  },
+  "hash": "9038a86fe91331fe208f9ecd16316555d1d293e7d377142e671bd24e755e1d17"
+}

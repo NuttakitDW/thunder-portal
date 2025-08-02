@@ -39,8 +39,10 @@ setup:
 	@cd relayer && npm install
 	@cd resolver && npm install
 	@cd thunder-cli && npm install
+	@echo "2️⃣  Setting up Bitcoin HTLC service..."
+	@cd bitcoin-htlc && make setup
 	@echo "2️⃣  Building Bitcoin HTLC service..."
-	@cd bitcoin-htlc && cargo build --release
+	@cd bitcoin-htlc && make build
 	@echo "3️⃣  Building Thunder CLI..."
 	@cd thunder-cli && npm run build
 	@echo "4️⃣  Creating necessary directories..."
@@ -169,19 +171,21 @@ thunder: setup start
 	@cd thunder-cli && node dist/cli.js --demo
 
 # Real blockchain swap on testnet
-swap-testnet:
-	@echo "$(YELLOW)⚡ Preparing real blockchain swap (BTC testnet ⟷ ETH Sepolia)...$(NC)"
-	@echo "$(CYAN)This will execute real transactions on testnet blockchains$(NC)"
-	@echo ""
-	@echo "$(YELLOW)Prerequisites:$(NC)"
-	@echo "  • Bitcoin testnet3 wallet with funds"
-	@echo "  • Ethereum Sepolia wallet with ETH"
-	@echo "  • Valid RPC endpoints configured"
-	@echo ""
-	@echo "$(RED)🚧 Under Construction 🚧$(NC)"
-	@echo "This feature is being implemented. Check doc/plan.md for progress."
-	@# TODO: Implement real testnet swap
-	@# ./scripts/swap-testnet.sh
+swap-testnet: check-testnet-config
+	@./scripts/swap-testnet.sh
+
+# Setup testnet configuration
+setup-testnet:
+	@echo "$(YELLOW)🔧 Setting up testnet configuration...$(NC)"
+	@./scripts/setup-testnet-config.sh
+
+# Check testnet configuration
+check-testnet-config:
+	@if [ ! -f "bitcoin-htlc/.env" ] || [ ! -f "resolver/.env" ] || [ ! -f "relayer/.env" ]; then \
+		echo "$(RED)❌ Testnet configuration not found$(NC)"; \
+		echo "$(YELLOW)Running setup...$(NC)"; \
+		./scripts/setup-testnet-config.sh; \
+	fi
 
 # Check all testnet wallet balances
 balances:

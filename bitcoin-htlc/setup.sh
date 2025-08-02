@@ -30,11 +30,26 @@ fi
 
 # Create database
 echo "🗄️  Setting up database..."
-touch thunder_portal.db
+# Ensure data directory exists
+mkdir -p data
+
+# Clean up any existing database files
+rm -f thunder_portal.db thunder_portal.db-shm thunder_portal.db-wal
+rm -f data/thunder_portal_testnet.db data/thunder_portal_testnet.db-shm data/thunder_portal_testnet.db-wal
+
+# Use the default development database path
+export DATABASE_URL="sqlite:./thunder_portal.db"
+
+# Create the database using SQLx
+sqlx database create
 
 # Run migrations
 echo "🔄 Running database migrations..."
 sqlx migrate run
+
+# Generate SQLx offline data for builds on other machines
+echo "📦 Preparing SQLx offline mode..."
+cargo sqlx prepare --check || cargo sqlx prepare
 
 # Build the project
 echo "🔨 Building project..."
