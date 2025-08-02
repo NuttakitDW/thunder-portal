@@ -74,7 +74,7 @@ export const BitcoinClaimInterface: React.FC<BitcoinClaimInterfaceProps> = ({
                         </Box>
                         <Text>Transaction Hash:</Text>
                         <Text color="cyan">{txHash}</Text>
-                        <Text> </Text>
+                        <Box marginBottom={1} />
                         <Text color="green">Your Bitcoin has been successfully claimed!</Text>
                         <Text dimColor>The transaction is being confirmed on the Bitcoin network.</Text>
                     </Box>
@@ -94,12 +94,12 @@ export const BitcoinClaimInterface: React.FC<BitcoinClaimInterfaceProps> = ({
                     <Box flexDirection="column">
                         <Text>The Ethereum side has revealed the secret!</Text>
                         <Text>You can now claim your Bitcoin from the HTLC.</Text>
-                        <Text> </Text>
+                        <Box marginBottom={1} />
                         <Text>HTLC Address:</Text>
                         <Text color="cyan">{htlcAddress}</Text>
                         {secret && (
                             <>
-                                <Text> </Text>
+                                <Box marginBottom={1} />
                                 <Text>Secret (revealed):</Text>
                                 <Text color="green">{secret.substring(0, 20)}...</Text>
                             </>

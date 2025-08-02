@@ -75,13 +75,13 @@ export const BalanceView: React.FC<BalanceViewProps> = ({ demoMode, onBack }) =>
             <Box borderStyle="round" borderColor="cyan" padding={1} marginBottom={1}>
                 <Box flexDirection="column">
                     <Text bold color="yellow">📊 Current Balances</Text>
-                    <Text> </Text>
+                    <Box marginBottom={1} />
                     <Box>
                         <Text color="orange">₿ Bitcoin: </Text>
                         <Text bold>{balances?.btc} BTC</Text>
                     </Box>
                     <Text dimColor>  {balances?.btcAddress}</Text>
-                    <Text> </Text>
+                    <Box marginBottom={1} />
                     <Box>
                         <Text color="blue">⟠ Ethereum: </Text>
                         <Text bold>{balances?.eth} ETH</Text>

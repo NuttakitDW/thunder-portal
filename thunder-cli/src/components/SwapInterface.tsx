@@ -140,12 +140,12 @@ export const SwapInterface: React.FC<SwapInterfaceProps> = ({ demoMode, onSwapCr
                     <Box borderStyle="round" borderColor="yellow" padding={1} marginBottom={1}>
                         <Box flexDirection="column">
                             <Text bold>Swap Details:</Text>
-                            <Text> </Text>
+                            <Box marginBottom={1} />
                             <Text>Direction: {direction === 'btc-to-eth' ? '₿ BTC → ⟠ ETH' : '⟠ ETH → ₿ BTC'}</Text>
                             <Text>You send: {amount} {direction === 'btc-to-eth' ? 'BTC' : 'ETH'}</Text>
                             <Text>You receive: ~{calculateReceiveAmount()} {direction === 'btc-to-eth' ? 'ETH' : 'BTC'}</Text>
                             <Text>Rate: {direction === 'btc-to-eth' ? '20 ETH/BTC' : '0.05 BTC/ETH'}</Text>
-                            <Text> </Text>
+                            <Box marginBottom={1} />
                             <Text bold color="cyan">⚡ Order Chunking:</Text>
                             <Text>Your order will be split into 100 chunks</Text>
                             <Text>Each chunk: {(parseFloat(amount) / 100).toFixed(6)} {direction === 'btc-to-eth' ? 'BTC' : 'ETH'}</Text>
