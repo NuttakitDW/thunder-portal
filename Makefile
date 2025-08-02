@@ -185,12 +185,30 @@ thunder: setup
 	@cd thunder-cli && npm run build > /dev/null 2>&1
 	@cd thunder-cli && node dist/cli.js --demo
 
-# Real blockchain swap on testnet with real balance tracking (uses local services)
+# Real blockchain swap on testnet - connects to actual testnets
 swap-testnet: check-testnet-config
-	@echo "$(YELLOW)⚡ Running testnet swap with balance tracking (local services)...$(NC)"
-	@echo "$(CYAN)Using testnet wallet addresses from doc/testnet-wallets/$(NC)"
-	@echo "$(YELLOW)Note: This uses local Bitcoin regtest and Hardhat for development$(NC)"
-	@./scripts/swap-testnet-wrapper.sh
+	@echo "$(YELLOW)⚡ Thunder Portal - Real Testnet Atomic Swap$(NC)"
+	@echo "$(CYAN)Connecting to Bitcoin testnet3 and Ethereum Sepolia$(NC)"
+	@echo ""
+	@# First check if services are running
+	@if ! curl -s http://localhost:3000/v1/health > /dev/null 2>&1; then \
+		echo "$(RED)❌ Bitcoin HTLC API not running!$(NC)"; \
+		echo "$(YELLOW)Starting services...$(NC)"; \
+		$(MAKE) start; \
+	fi
+	@echo ""
+	@# Check if contracts are deployed
+	@if [ ! -f "deployments/sepolia-deployment.json" ]; then \
+		echo "$(YELLOW)📄 Contracts not deployed to Sepolia yet$(NC)"; \
+		echo "Would you like to deploy now? (requires ~0.1 ETH)"; \
+		read -p "Deploy contracts? [y/N] " -n 1 -r; \
+		echo ""; \
+		if [[ $$REPLY =~ ^[Yy]$$ ]]; then \
+			node scripts/deploy-to-sepolia.js; \
+		fi \
+	fi
+	@echo ""
+	@node scripts/execute-real-testnet-swap.js
 
 # Real testnet swap - connects to actual Bitcoin testnet3 and Ethereum Sepolia
 swap-testnet-real: check-testnet-config
