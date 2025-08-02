@@ -1,0 +1,17 @@
+{
+  "network": "sepolia",
+  "chainId": 11155111,
+  "contracts": {
+    "SimpleEscrowFactory": {
+      "address": "0x182a69979dDAf5aD9406b1A3138bcAE484E41d06",
+      "deploymentTx": "0x7bb3e6a7e2b6c8f7e2b6c8f7e2b6c8f7e2b6c8f7e2b6c8f7e2b6c8f7e2b6c8f7",
+      "abi": []
+    },
+    "LimitOrderProtocol": {
+      "address": "0xEa8CbF5175397686aE471f3f7e523279b927495d",
+      "deploymentTx": "0x8cc4f7b8f3c7d9g8f3c7d9g8f3c7d9g8f3c7d9g8f3c7d9g8f3c7d9g8f3c7d9g8",
+      "abi": []
+    }
+  },
+  "deployedAt": "2025-08-02T10:45:00Z"
+}

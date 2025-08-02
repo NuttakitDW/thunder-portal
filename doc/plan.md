@@ -42,25 +42,27 @@
 - [x] Complete documentation created at `doc/testnet-wallets/WALLETS-COMPLETE.md`
 - [x] Environment file `.env.testnet` ready for configuration
 - [x] Fund wallets using testnet faucets (see complete details in wallet docs)
+- [x] `make balances` command working to check all wallet balances
 
 **Key Addresses:**
-- Bitcoin Maker: `tb1qthmpa24ghlyfcx654ahr65we2fry285jmxnd87`
-- Bitcoin Resolver: `tb1qh3kya4ejyypt8e29kz2v6jfzxw9mxwuvv8xdut`
-- Ethereum Resolver: `0xF79e5800150C8DFB3730C9Da17a157dD9D53E6db`
+- Bitcoin Maker: `tb1qthmpa24ghlyfcx654ahr65we2fry285jmxnd87` (0.00157925 BTC)
+- Bitcoin Resolver: `tb1qh3kya4ejyypt8e29kz2v6jfzxw9mxwuvv8xdut` (0.00180269 BTC)
+- Ethereum Resolver: `0xF79e5800150C8DFB3730C9Da17a157dD9D53E6db` (3.998599 ETH)
 - See `doc/testnet-wallets/WALLETS-COMPLETE.md` for all details
 
-#### 2.2 Bitcoin Testnet Integration (1 hour)
-- [ ] Configure Bitcoin HTLC service for testnet3 RPC endpoints
+#### 2.2 Bitcoin Testnet Integration (1 hour) - IN PROGRESS
+- [x] Configure Bitcoin HTLC service for testnet3 RPC endpoints (Using Blockstream API)
 - [ ] Update timeout calculations for 10-minute blocks (use 6 blocks = ~60 min timeout)
-- [ ] Set up resolver service wallet with Bitcoin Core RPC
+- [x] Set up testnet3 network configuration in services
 - [ ] Configure wallet derivation paths (m/84'/1'/0'/0/0 for P2WPKH)
 
-#### 2.3 Ethereum Sepolia Integration (45 min)
-- [ ] Deploy contracts to Sepolia testnet
-- [ ] Configure resolver/relayer for Sepolia RPC
-- [ ] Set up resolver service wallet with sufficient ETH for liquidity + gas
-- [ ] Update gas estimation for real network conditions
-- [ ] Configure wallet addresses in environment variables
+#### 2.3 Ethereum Sepolia Integration (45 min) - COMPLETED ✅
+- [x] Deploy contracts to Sepolia testnet
+  - LimitOrderProtocol: `0xEa8CbF5175397686aE471f3f7e523279b927495d`
+  - SimpleEscrowFactory: `0x182a69979dDAf5aD9406b1A3138bcAE484E41d06`
+- [x] Configure resolver/relayer for Sepolia RPC (Infura endpoint)
+- [x] Set up resolver service wallet with sufficient ETH for liquidity + gas
+- [ ] Update contract addresses in all services configuration
 - [ ] Verify cross-chain communication paths
 
 #### 2.4 Demo Time Optimization (45 min)
@@ -255,10 +257,37 @@ ETH_SEPOLIA_RPC=https://sepolia.infura.io/v3/<API_KEY>
 
 ## Next Steps
 
-1. **Immediate**: Begin Phase 2.1 (Bitcoin testnet configuration)
-2. **Parallel**: Deploy contracts to Sepolia
-3. **Validate**: End-to-end testnet flow
-4. **Rehearse**: Demo timing and reliability
-5. **Prepare**: Judge presentation materials
+### Current Status (As of Aug 2, 2025)
+- ✅ Wallets created and funded on both testnets
+- ✅ Contracts deployed to Sepolia
+- ✅ `make thunder` working perfectly for mock demo
+- ✅ `make balances` command operational
+- ✅ Services running with local configuration
 
-**Decision Point**: Single comprehensive agent vs. specialized agent team for optimal execution speed and coordination.
+### Immediate Next Steps (Without Breaking Working System)
+
+1. **Update Contract Addresses** (10 min)
+   - Update resolver/.env with Sepolia contract addresses
+   - Update any hardcoded addresses in services
+   - Keep existing local setup as fallback
+
+2. **Create Testnet Demo Script** (30 min)
+   - Create new script that uses deployed contracts
+   - Keep it separate from working `make thunder`
+   - Focus on simple demonstration flow
+
+3. **Test Minimal Swap Flow** (20 min)
+   - Test contract interaction on Sepolia
+   - Verify wallet connections work
+   - Don't modify existing working services
+
+4. **Create Hybrid Demo** (20 min)
+   - Use real Sepolia contracts for visual effect
+   - Keep Bitcoin side simulated for speed
+   - Show real Etherscan links to judges
+
+### Safe Implementation Strategy
+
+**DO NOT**: Modify working `make thunder` flow
+**DO**: Create parallel testnet demonstration
+**FALLBACK**: Always have `make thunder` ready for judges

@@ -174,6 +174,11 @@ thunder: setup start
 swap-testnet: check-testnet-config
 	@./scripts/swap-testnet.sh
 
+# Sepolia contract demo (safe, doesn't modify services)
+demo-sepolia:
+	@echo "$(YELLOW)🚀 Running Sepolia contract demo...$(NC)"
+	@node scripts/demo-sepolia-swap.js
+
 # Setup testnet configuration
 setup-testnet:
 	@echo "$(YELLOW)🔧 Setting up testnet configuration...$(NC)"
