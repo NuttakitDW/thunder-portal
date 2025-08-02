@@ -1,0 +1,65 @@
+{
+  "name": "@thunder-portal/cli",
+  "version": "1.0.0",
+  "description": "⚡ Beautiful CLI for trustless Bitcoin-Ethereum atomic swaps",
+  "main": "dist/index.js",
+  "type": "module",
+  "bin": {
+    "thunder": "./dist/cli.js",
+    "thunder-portal": "./dist/cli.js"
+  },
+  "scripts": {
+    "dev": "tsx src/cli.tsx",
+    "build": "tsc && mkdir -p dist/utils && cp src/utils/*.js dist/utils/ && chmod +x dist/cli.js",
+    "start": "node dist/cli.js",
+    "lint": "eslint src --ext .ts,.tsx",
+    "prepublishOnly": "npm run build",
+    "demo": "tsx src/cli.tsx --demo"
+  },
+  "keywords": [
+    "bitcoin",
+    "ethereum",
+    "atomic-swap",
+    "defi",
+    "1inch",
+    "cross-chain",
+    "cli",
+    "terminal-ui"
+  ],
+  "author": "Thunder Portal Team",
+  "license": "MIT",
+  "dependencies": {
+    "ink": "^3.2.0",
+    "ink-big-text": "^1.2.0",
+    "ink-gradient": "^2.0.0",
+    "ink-select-input": "^4.2.2",
+    "ink-spinner": "^4.0.3",
+    "ink-text-input": "^4.0.3",
+    "ink-table": "^3.0.0",
+    "react": "^17.0.2",
+    "axios": "^1.6.0",
+    "chalk": "^5.3.0",
+    "figlet": "^1.7.0",
+    "meow": "^11.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^17.0.50",
+    "@types/figlet": "^1.5.8",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.0",
+    "eslint": "^8.56.0",
+    "@typescript-eslint/eslint-plugin": "^6.19.0",
+    "@typescript-eslint/parser": "^6.19.0"
+  },
+  "engines": {
+    "node": ">=14"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/thunder-portal/thunder-cli"
+  }
+}

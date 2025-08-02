@@ -20,7 +20,13 @@
     "compile": "hardhat compile",
     "deploy:local": "hardhat run scripts/deploy.js --network localhost",
     "bitcoin:fund": "curl -X POST http://localhost:3002/bitcoin-fund",
-    "bitcoin:status": "curl -s http://localhost:3002/bitcoin-status | jq"
+    "bitcoin:status": "curl -s http://localhost:3002/bitcoin-status | jq",
+    "setup:production": "./scripts/setup-production.sh",
+    "deploy:production": "hardhat run scripts/deploy.js --network sepolia",
+    "verify:production": "hardhat verify --network sepolia",
+    "start:production": "docker-compose -f docker-compose.production.yml up -d",
+    "stop:production": "docker-compose -f docker-compose.production.yml down",
+    "logs:production": "docker-compose -f docker-compose.production.yml logs -f"
   },
   "dependencies": {
     "axios": "^1.6.0",

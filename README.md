@@ -13,6 +13,66 @@ A complete implementation that extends 1inch Fusion+ to support Bitcoin, enablin
 - **Professional Liquidity**: Resolver network provides competitive rates
 - **Gas-Free**: Users pay zero gas fees (resolvers handle everything)
 
+## ⚡ Quick Start
+
+### Prerequisites
+- Node.js 18+
+- Rust 1.70+ 
+- Git
+
+### One Command Demo
+
+```bash
+# Clone and run everything
+git clone https://github.com/thunder-portal/thunder-portal
+cd thunder-portal
+make thunder
+```
+
+This will:
+1. Install all dependencies
+2. Start Bitcoin regtest and Ethereum local networks
+3. Deploy smart contracts
+4. Start all backend services
+5. Launch the Thunder CLI with beautiful interface
+
+### Alternative: Step by Step
+
+```bash
+# 1. Setup
+make setup      # Install dependencies
+
+# 2. Start services
+make start      # Start Bitcoin, Ethereum, and all backend services
+
+# 3. Run Thunder CLI
+make cli-demo   # Launch interactive demo
+# OR
+make cli        # Production mode
+```
+
+### Thunder CLI Commands
+
+| Command | Description |
+|---------|-------------|
+| `make thunder` | One-command setup + start + demo |
+| `make cli-demo` | Run CLI in demo mode with auto-progression |
+| `make cli-judge` | Special demo for hackathon judges |
+| `make cli` | Run CLI in production mode |
+| `make start` | Start all backend services |
+| `make stop` | Stop all services |
+| `make clean` | Clean and reset everything |
+| `make logs` | View service logs |
+| `make help` | Show all available commands |
+
+### What You'll See
+
+1. **Beautiful Thunder CLI** - Yellow lightning-themed terminal interface
+2. **Live Order Chunking** - Visual display of 100-piece order splitting
+3. **Real-time Progress** - Automatic progression from 0% to 100%
+4. **Bitcoin Claiming** - One-click interface when ready
+5. **Transaction Hashes** - Real Bitcoin and Ethereum transactions
+
 ## 🏗️ Architecture
 
 ### Complete System Architecture
@@ -298,287 +358,18 @@ timeline
            : (BTC can be refunded)
 ```
 
-- **Timeout Hierarchy**: BTC (48h) > ETH (24h) prevents race conditions
-- **Atomic Guarantee**: All-or-nothing execution
-- **No Custody**: Users control funds throughout
+## 📁 Project Structure
 
-### API Endpoints
-- `POST /v1/orders` - Create swap order
-- `POST /v1/htlc/create` - Generate HTLC
-- `POST /v1/htlc/verify` - Verify HTLC
-- `POST /v1/htlc/{id}/claim` - Claim with preimage
-- `GET /v1/health` - Service status
-
-## 🔗 1inch Limit Order Protocol Integration
-
-Thunder Portal integrates with 1inch's Limit Order Protocol to enable trustless Bitcoin-Ethereum atomic swaps within the 1inch ecosystem.
-
-### How It Works
-
-```mermaid
-graph LR
-    subgraph "1inch Protocol"
-        LOP[Limit Order Protocol]
-        F[Fusion+ Settlement]
-    end
-    
-    subgraph "Thunder Portal"
-        TP[Thunder Portal]
-        BH[Bitcoin HTLC]
-        EE[Ethereum Escrow]
-    end
-    
-    subgraph "Flow"
-        U[User] -->|1. Create Order| LOP
-        LOP -->|2. Register BTC Order| TP
-        TP -->|3. Create HTLC| BH
-        TP -->|4. Create Escrow| EE
-        F -->|5. Settle on Match| EE
-        EE -->|6. Release BTC| BH
-    end
 ```
-
-### Integration Points
-
-1. **Order Creation**
-   - Users create limit orders through 1inch interface
-   - Orders specify BTC/ETH exchange parameters
-   - Thunder Portal registers as resolver for Bitcoin orders
-
-2. **Order Matching**
-   - 1inch protocol matches orders as usual
-   - When Bitcoin orders match, Thunder Portal is notified
-   - Atomic swap process initiates automatically
-
-3. **Settlement**
-   - 1inch Fusion+ handles Ethereum-side settlement
-   - Thunder Portal coordinates Bitcoin HTLC creation
-   - Cryptographic proofs ensure atomic execution
-
-### Smart Contract Integration
-
-```solidity
-// LimitOrderProtocol.sol integration
-function initiateCrossChainSwap(
-    bytes32 orderHash,
-    uint256 bitcoinAmount,
-    uint256 ethereumAmount
-) external {
-    // Called by Thunder Portal when BTC order matches
-    // Creates escrow and links to Bitcoin HTLC
-    remainingAmount[orderHash] = ethereumAmount;
-}
-```
-
-### Benefits
-
-- **Native Integration**: Bitcoin swaps appear as regular limit orders in 1inch
-- **Familiar UX**: Users interact with standard 1inch interface
-- **Professional Liquidity**: Access to 1inch's resolver network
-- **Gas Optimization**: Leverages 1inch's gas-efficient settlement
-- **Composability**: Bitcoin orders can be part of complex routes
-
-## 🚦 Current Status
-
-### ✅ Implemented
-- Complete Rust backend with all endpoints
-- Bitcoin HTLC generation and verification
-- SQLite database with migrations
-- Docker support
-- Comprehensive test suite
-- Full API documentation
-
-### 🔧 Fork Requirements
-To support Bitcoin in 1inch Fusion+, we need to:
-
-1. **Protocol Extensions**
-   - Add `BTC` as valid asset type
-   - Extend order structure with Bitcoin address fields
-   - Add HTLC hash field to order metadata
-   - Modify validation to accept Bitcoin addresses
-
-2. **UI Modifications**
-   - Add Bitcoin wallet connection
-   - Support Bitcoin address input/validation
-   - Display BTC balances and rates
-   - Show HTLC status tracking
-
-3. **Matching Engine Updates**
-   - Recognize cross-chain order pairs
-   - Validate HTLC requirements
-   - Track presigned transaction status
-   - Handle longer settlement times
-
-### 🚧 Next Steps
-- Fork and extend 1inch Fusion+ protocol
-- Implement Bitcoin support in UI
-- Live Bitcoin network integration
-- Production testing with forked protocol
-- Mainnet deployment
-
-## 🏃 Quick Start
-
-### Prerequisites
-- Docker & Docker Compose
-- Node.js (v18+)
-- Rust & Cargo
-- Make
-
-### Local Development Setup
-
-```bash
-# 1. Clone repository
-git clone https://github.com/your-org/thunder-portal
-cd thunder-portal
-
-# 2. Setup everything
-make setup
-
-# 3. Start all services
-make start
-
-# 4. Run the demo
-make demo
-```
-
-### What's Running
-
-#### Ethereum (via Hardhat Fork)
-- Forks Ethereum mainnet at block 19,000,000
-- Pre-funded test accounts with 10,000 ETH each
-- RPC endpoint: `http://localhost:8545`
-
-#### Bitcoin (Regtest Network)
-- Local Bitcoin node in regtest mode
-- Pre-generated blocks and funded test wallet
-- RPC endpoint: `http://localhost:18443`
-- Credentials: `thunderportal / thunderportal123`
-
-### Test Accounts
-
-#### Ethereum Accounts
-All accounts are pre-funded with 10,000 ETH:
-
-| Role     | Address                                      | Private Key                                                        |
-|----------|----------------------------------------------|-------------------------------------------------------------------|
-| Owner    | `0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266` | `0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80` |
-| User     | `0x70997970C51812dc3A010C7d01b50e0d17dc79C8` | `0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d` |
-| Resolver | `0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC` | `0x5de4111afa1a4b94908f83103eb1f1706367c2e68ca870fc3fb9a804cdab365a` |
-
-#### Bitcoin Test Account
-- Private Key: `cVj5kMEHS9hSCwNvSjAqaf3x4HmgDMYu3yqeRCaWHYuBBFqhJzxs`
-- Funded with ~50 BTC (regtest)
-
-### Demo Commands
-
-Thunder Portal provides two demo modes:
-
-#### `make demo` - Simulated Demo (Recommended)
-- Shows the complete Thunder Portal vision
-- Demonstrates partial fulfillment with multiple resolvers
-- Illustrates order chunking (100 chunks)
-- Shows resolver competition (20% → 45% → 70% → 100%)
-- Perfect for understanding all innovations
-
-#### `make demo-real` - Real Blockchain Demo with 1inch Integration
-- Executes actual atomic swaps on local test networks
-- Integrates with 1inch Limit Order Protocol
-- Creates real Bitcoin HTLCs and Ethereum smart contracts
-- Generates real transaction hashes on both chains
-- Shows actual blockchain confirmations
-- Registers orders in 1inch ecosystem
-
-**What happens in the real demo:**
-1. Creates a real Bitcoin HTLC with 0.1 BTC
-2. Deploys an Ethereum escrow contract with 2.0 ETH
-3. Generates actual transaction IDs you can verify
-4. Mines blocks for confirmations
-5. Executes the atomic swap with real cryptographic proofs
-
-**Example output:**
-```
-Bitcoin HTLC funded with txid: 7a8b9c...
-Ethereum escrow deployed at: 0x1234...
-Atomic swap completed successfully!
-```
-
-### Available Commands
-
-```bash
-# Setup everything (one time)
-make setup
-
-# Start all services
-make start
-
-# Run the demo (simulated with partial fulfillment)
-make demo
-
-# Run the demo with real blockchain transactions
-make demo-real
-
-# Stop all services and clean up
-make clean
-
-# Restart everything fresh
-make restart
-
-# Check service status
-make status
-
-# View logs
-make logs
-```
-
-### Manual Operations
-
-#### Bitcoin CLI Commands
-```bash
-# Check balance
-docker exec thunder-bitcoin-regtest bitcoin-cli -regtest getbalance
-
-# Generate blocks
-docker exec thunder-bitcoin-regtest bitcoin-cli -regtest generatetoaddress 1 $(docker exec thunder-bitcoin-regtest bitcoin-cli -regtest getnewaddress)
-
-# Get block info
-docker exec thunder-bitcoin-regtest bitcoin-cli -regtest getblockcount
-```
-
-#### Ethereum Commands (via Hardhat console)
-```bash
-# Open Hardhat console
-npx hardhat console --network localhost
-
-# In console:
-const [owner, user, resolver] = await ethers.getSigners()
-await owner.getBalance()
-```
-
-### Troubleshooting
-
-#### Port Already in Use
-If you see "Port 8545 is already in use":
-```bash
-# Find and kill the process
-lsof -ti:8545 | xargs kill -9
-```
-
-#### Bitcoin Connection Failed
-Make sure Docker is running:
-```bash
-docker ps
-```
-
-#### Hardhat Fork Issues
-Check the logs:
-```bash
-tail -f logs/hardhat.log
-```
-
-#### Reset Everything
-```bash
-make clean
-make start
+thunder-portal/
+├── bitcoin-htlc/        # Rust service for Bitcoin HTLC operations
+├── resolver/            # Order matching and coordination service
+├── relayer/            # Cross-chain event monitoring service
+├── evm-resolver/       # Ethereum smart contracts
+├── thunder-cli/        # Beautiful terminal interface
+├── scripts/            # Deployment and utility scripts
+├── logs/              # Service logs
+└── Makefile           # All commands you need
 ```
 
 ## 🎯 Key Features
@@ -741,14 +532,13 @@ No need to understand HTLCs, secrets, or Bitcoin Script!
   - Complete: `idx = 100` (uses special secret)
 - **Security**: MerkleStorageInvalidator prevents secret reuse
 
-### Maker vs Resolver Roles
-- **Makers**: Create intents, don't need to run infrastructure
-- **Resolvers**: Professional market makers who run Thunder Portal
-- **Separation**: Makers just sign, resolvers handle all execution
+## 🌐 Production Deployment
 
-## 🤝 Contributing
+Thunder Portal is deployed on **Sepolia Testnet** for testing:
 
-We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+### Deployed Contracts
+- **LimitOrderProtocol**: [`0xEa8CbF5175397686aE471f3f7e523279b927495d`](https://sepolia.etherscan.io/address/0xEa8CbF5175397686aE471f3f7e523279b927495d#code)
+- **SimpleEscrowFactory**: [`0x182a69979dDAf5aD9406b1A3138bcAE484E41d06`](https://sepolia.etherscan.io/address/0x182a69979dDAf5aD9406b1A3138bcAE484E41d06#code)
 
 ## 📄 License
 
