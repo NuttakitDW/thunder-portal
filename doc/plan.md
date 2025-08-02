@@ -34,19 +34,40 @@
 ### Phase 2: Testnet Configuration (2-3 hours) - CRITICAL PATH
 **Priority: HIGH - Required for hackathon demo**
 
-#### 2.1 Bitcoin Testnet Integration (1 hour)
+#### 2.1 Wallet Setup and Funding (30 min) - NEW SECTION
+**Total Wallets Required: 8 (4 Bitcoin testnet3, 4 Ethereum Sepolia)**
+
+**Bitcoin Testnet3 Wallets:**
+- [ ] **Maker Wallet** - User sending BTC (fund with 0.1-1 BTC)
+- [ ] **Resolver Service Wallet** - Liquidity provider (fund with 1-5 BTC)
+- [ ] **HTLC Escrow Address** - Derived P2WSH address for atomic locking
+- [ ] **Taker Wallet** - User receiving BTC (no initial funding needed)
+
+**Ethereum Sepolia Wallets:**
+- [ ] **Maker Wallet** - User receiving ETH (fund with 0.1 ETH for gas)
+- [ ] **Resolver Service Wallet** - Liquidity provider (fund with 5-10 ETH)
+- [ ] **Escrow Contract** - Smart contract address (deployed by factory)
+- [ ] **Taker Wallet** - User sending ETH (fund with 1-5 ETH)
+
+**Funding Sources:**
+- Bitcoin Testnet3: https://coinfaucet.eu/en/btc-testnet/, https://bitcoinfaucet.uo1.net/
+- Ethereum Sepolia: https://sepoliafaucet.com/, https://sepolia-faucet.pk910.de/
+
+#### 2.2 Bitcoin Testnet Integration (1 hour)
 - [ ] Configure Bitcoin HTLC service for testnet3 RPC endpoints
 - [ ] Update timeout calculations for 10-minute blocks (use 6 blocks = ~60 min timeout)
-- [ ] Implement testnet coin pre-funding workflow
-- [ ] Add testnet faucet integration for demo setup
+- [ ] Set up resolver service wallet with Bitcoin Core RPC
+- [ ] Configure wallet derivation paths (m/84'/1'/0'/0/0 for P2WPKH)
 
-#### 2.2 Ethereum Sepolia Integration (45 min)
+#### 2.3 Ethereum Sepolia Integration (45 min)
 - [ ] Deploy contracts to Sepolia testnet
 - [ ] Configure resolver/relayer for Sepolia RPC
+- [ ] Set up resolver service wallet with sufficient ETH for liquidity + gas
 - [ ] Update gas estimation for real network conditions
+- [ ] Configure wallet addresses in environment variables
 - [ ] Verify cross-chain communication paths
 
-#### 2.3 Demo Time Optimization (45 min)
+#### 2.4 Demo Time Optimization (45 min)
 - [ ] Implement 0-confirmation Bitcoin acceptance for demo speed
 - [ ] Add mempool monitoring for instant feedback
 - [ ] Create "fast demo mode" with optimistic execution
@@ -81,6 +102,40 @@
 - [ ] Production RPC endpoints
 - [ ] Enhanced error handling
 - [ ] Transaction fee optimization
+
+## Wallet Configuration Details
+
+### Environment Variables Required
+```bash
+# Bitcoin Testnet3
+BTC_MAKER_ADDRESS=<maker_btc_address>
+BTC_MAKER_PRIVATE_KEY=<maker_btc_private_key>
+BTC_RESOLVER_ADDRESS=<resolver_btc_address>
+BTC_RESOLVER_PRIVATE_KEY=<resolver_btc_private_key>
+BTC_TAKER_ADDRESS=<taker_btc_address>
+
+# Ethereum Sepolia
+ETH_MAKER_ADDRESS=<maker_eth_address>
+ETH_MAKER_PRIVATE_KEY=<maker_eth_private_key>
+ETH_RESOLVER_ADDRESS=<resolver_eth_address>
+ETH_RESOLVER_PRIVATE_KEY=<resolver_eth_private_key>
+ETH_TAKER_ADDRESS=<taker_eth_address>
+ETH_TAKER_PRIVATE_KEY=<taker_eth_private_key>
+
+# RPC Endpoints
+BTC_TESTNET_RPC=https://testnet.bitcoinrpc.com/
+ETH_SEPOLIA_RPC=https://sepolia.infura.io/v3/<API_KEY>
+```
+
+### Wallet Roles in Swap Flow
+1. **Maker initiates swap**: Locks BTC in HTLC, expects ETH
+2. **Resolver provides liquidity**: Locks ETH in escrow, monitors BTC HTLC
+3. **Taker completes swap**: Sends ETH, claims BTC with preimage
+4. **Atomic completion**: Both sides finalize with same secret
+
+### Total Funding Requirements
+- **Bitcoin Testnet3**: ~6-11 BTC total
+- **Ethereum Sepolia**: ~6.6-15.6 ETH total
 
 ## Risk Mitigation
 
