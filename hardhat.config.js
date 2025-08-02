@@ -1,4 +1,5 @@
 
+require("dotenv").config({ path: "./doc/testnet-wallets/.env.testnet" });
 require("@nomicfoundation/hardhat-toolbox");
 
 /** @type import('hardhat/config').HardhatUserConfig */
@@ -48,6 +49,13 @@ module.exports = {
     },
     localhost: {
       url: "http://127.0.0.1:8545"
+    },
+    sepolia: {
+      url: process.env.ETH_SEPOLIA_RPC || "https://sepolia.infura.io/v3/7979b6b00e674dfabafcea1aac484f66",
+      accounts: process.env.ETH_RESOLVER_PRIVATE_KEY ? [process.env.ETH_RESOLVER_PRIVATE_KEY] : [],
+      chainId: 11155111,
+      gas: "auto",
+      gasPrice: "auto"
     }
   }
 };
