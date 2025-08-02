@@ -540,49 +540,6 @@ Thunder Portal is deployed on **Sepolia Testnet** for testing:
 - **LimitOrderProtocol**: [`0xEa8CbF5175397686aE471f3f7e523279b927495d`](https://sepolia.etherscan.io/address/0xEa8CbF5175397686aE471f3f7e523279b927495d#code)
 - **SimpleEscrowFactory**: [`0x182a69979dDAf5aD9406b1A3138bcAE484E41d06`](https://sepolia.etherscan.io/address/0x182a69979dDAf5aD9406b1A3138bcAE484E41d06#code)
 
-### Production Setup
-
-1. **Configure Environment**
-   ```bash
-   # Copy production environment template
-   cp .env.production .env
-   
-   # Edit .env and add your private key
-   # PRIVATE_KEY=your_private_key_here
-   # ETHERSCAN_API_KEY=your_etherscan_api_key (optional, for verification)
-   ```
-
-2. **Run Production Setup**
-   ```bash
-   # Configure for production deployment
-   ./scripts/setup-production.sh
-   ```
-
-3. **Deploy Services (Docker)**
-   ```bash
-   # Build and start all services
-   docker-compose -f docker-compose.production.yml up -d
-   
-   # Check service status
-   docker-compose -f docker-compose.production.yml ps
-   
-   # View logs
-   docker-compose -f docker-compose.production.yml logs -f
-   ```
-
-### Configuration Details
-- **Network**: Sepolia Testnet (Chain ID: 11155111)
-- **RPC**: `https://sepolia.infura.io/v3/7979b6b00e674dfabafcea1aac484f66`
-- **Bitcoin**: Testnet
-
-### Production Commands
-| Command | Description |
-|---------|-------------|
-| `npm run setup:production` | Configure production environment |
-| `npm run start:production` | Start services with Docker |
-| `npm run stop:production` | Stop production services |
-| `npm run logs:production` | View production logs |
-
 ## 📄 License
 
 MIT License - see [LICENSE](LICENSE) for details.

@@ -1,15 +1,15 @@
 {
   "network": "hardhat-local",
-  "timestamp": "2025-08-01T21:20:19Z",
+  "timestamp": "2025-08-02T04:43:11Z",
   "contracts": {
     "SimpleEscrowFactory": {
-      "address": "0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9"
+      "address": "0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6"
     },
     "TestEscrow": {
       "orderHash": "0x1669a3216497744154ac48c6c1dbff3f98f034a56ad749249a15c77489ee9f1d",
       "address": "",
       "htlcHashlock": "0x09c5909f9a48dbc21a3cb930dbcfe748a320f9bb1b6e513ddea57f85afb79c67",
-      "htlcTimeout": 1754169619
+      "htlcTimeout": 1754196191
     }
   }
 }
