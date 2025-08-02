@@ -1,0 +1,88 @@
+version: '3.8'
+
+services:
+  # Thunder Portal Resolver Service
+  resolver:
+    build: ./resolver
+    ports:
+      - "3002:3002"
+    environment:
+      - NODE_ENV=production
+      - ETHEREUM_RPC_URL=${ETHEREUM_RPC_URL}
+      - ETHEREUM_CHAIN_ID=${ETHEREUM_CHAIN_ID}
+      - LIMIT_ORDER_PROTOCOL_ADDRESS=${LIMIT_ORDER_PROTOCOL_ADDRESS}
+      - SIMPLE_ESCROW_FACTORY_ADDRESS=${SIMPLE_ESCROW_FACTORY_ADDRESS}
+      - HTLC_SERVICE_URL=${HTLC_SERVICE_URL}
+      - RELAYER_SERVICE_URL=${RELAYER_SERVICE_URL}
+    restart: unless-stopped
+    networks:
+      - thunder-network
+
+  # Thunder Portal Relayer Service
+  relayer:
+    build: ./relayer
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+      - ETHEREUM_RPC_URL=${ETHEREUM_RPC_URL}
+      - SIMPLE_ESCROW_FACTORY_ADDRESS=${SIMPLE_ESCROW_FACTORY_ADDRESS}
+      - ENABLE_MONITORING=${ENABLE_MONITORING}
+      - SENTRY_DSN=${SENTRY_DSN}
+    restart: unless-stopped
+    networks:
+      - thunder-network
+
+  # Bitcoin HTLC Service (Rust)
+  bitcoin-htlc:
+    build: ./bitcoin-htlc
+    ports:
+      - "3000:3000"
+    environment:
+      - BITCOIN_NETWORK=${BITCOIN_NETWORK}
+      - BITCOIN_RPC_URL=${BITCOIN_RPC_URL}
+      - BITCOIN_RPC_USER=${BITCOIN_RPC_USER}
+      - BITCOIN_RPC_PASSWORD=${BITCOIN_RPC_PASSWORD}
+      - DATABASE_URL=postgres://thunder:portal@postgres:5432/thunder_portal
+    depends_on:
+      - postgres
+    restart: unless-stopped
+    networks:
+      - thunder-network
+
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_USER=thunder
+      - POSTGRES_PASSWORD=portal
+      - POSTGRES_DB=thunder_portal
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      - thunder-network
+
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.production.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - resolver
+      - relayer
+      - bitcoin-htlc
+    restart: unless-stopped
+    networks:
+      - thunder-network
+
+networks:
+  thunder-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
