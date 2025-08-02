@@ -1,0 +1,11 @@
+{
+  "contracts": {
+    "SimpleEscrowFactory": {
+      "address": "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0",
+      "abi": []
+    }
+  },
+  "network": "localhost",
+  "chainId": 31337,
+  "timestamp": "2025-08-02T16:29:06.162Z"
+}

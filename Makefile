@@ -58,10 +58,8 @@ start:
 	@echo "$(YELLOW)📜 Deploying smart contracts...$(NC)"
 	@# Wait a bit more to ensure Ethereum is fully ready
 	@sleep 3
-	@echo "1️⃣  Deploying 1inch Limit Order Protocol..."
-	@cd evm-resolver && npx hardhat run ../scripts/deploy-limit-order-protocol.js --network localhost || (echo "$(RED)Failed to deploy Limit Order Protocol$(NC)" && exit 1)
-	@echo "2️⃣  Deploying SimpleEscrowFactory contract..."
-	@cd evm-resolver && npx hardhat run ../scripts/deploy-simple-escrow-factory.js --network localhost || (echo "$(RED)Failed to deploy SimpleEscrowFactory$(NC)" && exit 1)
+	@echo "1️⃣  Deploying contracts..."
+	@node scripts/deploy-contracts-simple.js || (echo "$(RED)Failed to deploy contracts$(NC)" && exit 1)
 	@echo "3️⃣  Deploying Thunder Portal contracts..."
 	@if command -v forge >/dev/null 2>&1; then \
 		cd evm-resolver && ./scripts/deploy-with-forge.sh || echo "$(YELLOW)Forge deployment skipped$(NC)"; \
