@@ -24,7 +24,7 @@ mkdir -p data
 # Start Bitcoin regtest
 echo ""
 echo "1️⃣  Starting Bitcoin regtest network..."
-docker-compose up -d bitcoin-regtest
+docker compose up -d bitcoin-regtest
 
 # Wait for Bitcoin to be ready
 echo "   Waiting for Bitcoin to start..."

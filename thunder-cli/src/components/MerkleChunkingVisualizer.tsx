@@ -109,7 +109,7 @@ const MerkleChunkingVisualizer: React.FC<MerkleChunkingProps> = ({
                 <Box flexDirection="column" marginBottom={1}>
                     <Text bold>Key Features:</Text>
                     <Box marginLeft={2}>
-                        <Text color="green">• 101 secrets generated (100 partial + 1 complete)</Text>
+                        <Text color="green">• 100 chunks for optimal liquidity</Text>
                     </Box>
                     <Box marginLeft={2}>
                         <Text color="green">• Each chunk independently verifiable</Text>

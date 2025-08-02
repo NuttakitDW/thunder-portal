@@ -16,7 +16,7 @@ fi
 
 # Stop Docker containers
 echo "Stopping Bitcoin regtest..."
-docker-compose down
+docker compose down
 
 echo ""
 echo "✅ Development environment stopped"

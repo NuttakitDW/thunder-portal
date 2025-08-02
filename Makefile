@@ -129,7 +129,7 @@ clean:
 	@lsof -ti:3002 | xargs kill -9 2>/dev/null || true
 	@lsof -ti:8545 | xargs kill -9 2>/dev/null || true
 	@echo "2️⃣  Stopping Docker containers..."
-	@docker-compose down -v 2>/dev/null || true
+	@docker compose down -v 2>/dev/null || docker-compose down -v 2>/dev/null || true
 	@docker rm -f thunder-bitcoin-regtest 2>/dev/null || true
 	@echo "3️⃣  Removing old data..."
 	@rm -rf data/bitcoin/regtest/* 2>/dev/null || true
@@ -161,7 +161,16 @@ status:
 	@curl -s --user thunderportal:thunderportal123 http://127.0.0.1:18443/ -X POST -d '{"method":"getblockchaininfo"}' > /dev/null 2>&1 && echo "✅ Bitcoin: Running" || echo "❌ Bitcoin: Not running"
 
 # Main command: Beautiful mock demo with UI
-thunder: setup start
+thunder: setup
+	@if command -v docker >/dev/null 2>&1 && docker compose version >/dev/null 2>&1; then \
+		echo "$(GREEN)✅ Docker detected - starting full environment$(NC)"; \
+		$(MAKE) start; \
+	elif command -v docker-compose >/dev/null 2>&1; then \
+		echo "$(GREEN)✅ Docker Compose (legacy) detected - starting full environment$(NC)"; \
+		$(MAKE) start; \
+	else \
+		echo "$(YELLOW)⚠️  Docker not found - running demo mode only$(NC)"; \
+	fi
 	@echo "$(YELLOW)⚡ Thunder Portal is ready!$(NC)"
 	@echo "Starting Thunder CLI demo in 5 seconds..."
 	@sleep 5
@@ -178,6 +187,10 @@ swap-testnet: check-testnet-config
 demo-sepolia:
 	@echo "$(YELLOW)🚀 Running Sepolia contract demo...$(NC)"
 	@node scripts/demo-sepolia-swap.js
+
+# Show deployed Sepolia contracts
+show-contracts:
+	@node scripts/show-sepolia-contracts.js
 
 # Setup testnet configuration
 setup-testnet:

@@ -241,7 +241,7 @@ ENDIF
 ```mermaid
 graph TB
     subgraph "Order Creation"
-        O[1 BTC Order] --> S[Generate 101 Secrets]
+        O[1 BTC Order] --> S[Generate 100 Secrets]
         S --> MT[Build Merkle Tree]
         MT --> MR[Merkle Root in Order]
     end
@@ -250,7 +250,7 @@ graph TB
         MR --> L1["Leaf 0: hash(0, secret0)"]
         MR --> L2["Leaf 1: hash(1, secret1)"]
         MR --> L3["..."]
-        MR --> L100["Leaf 100: hash(100, secret100)"]
+        MR --> L100["Leaf 99: hash(99, secret99)"]
     end
     
     subgraph "Partial Fills"

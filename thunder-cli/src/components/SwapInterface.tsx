@@ -175,7 +175,7 @@ export const SwapInterface: React.FC<SwapInterfaceProps> = ({ demoMode, onSwapCr
                             <ProgressStep 
                                 complete 
                                 active={false}
-                                text="Generating 101 cryptographic secrets" 
+                                text="Generating cryptographic secret" 
                             />
                             <ProgressStep 
                                 complete 
