@@ -76,3 +76,8 @@ doc/testnet-wallets/wallets-sensitive.json
 doc/testnet-wallets/.env.testnet
 
 .claude
+
+# Reports (generated during testing)
+resolver/reports/
+*.report.json
+*-report.json

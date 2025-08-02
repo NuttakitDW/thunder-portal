@@ -16,7 +16,7 @@ const ESCROW_ABI = [
 ];
 
 // Factory address (from deployment)
-const FACTORY_ADDRESS = "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0";
+const FACTORY_ADDRESS = "0x610178dA211FEF7D417bC0e6FeD39F05609AD788";
 
 // Execute real atomic swap with actual blockchain transactions (simplified)
 function executeRealSwap(bitcoinService, provider, resolver) {
@@ -67,12 +67,17 @@ function executeRealSwap(bitcoinService, provider, resolver) {
         { gasLimit: 2000000 }
       );
       
-      const receipt = await createTx.wait();
       console.log(`[RESOLVER] Escrow creation tx: ${createTx.hash}`);
+      const receipt = await createTx.wait();
+      console.log(`[RESOLVER] Escrow creation confirmed in block: ${receipt.blockNumber}`);
       
       // Get escrow address from factory
       const escrowAddress = await factory.escrows(orderHash);
       console.log(`[RESOLVER] Ethereum escrow created at: ${escrowAddress}`);
+      
+      if (!escrowAddress || escrowAddress === '0x0000000000000000000000000000000000000000') {
+        throw new Error('Factory did not return a valid escrow address');
+      }
       
       // Step 5: Fund the Ethereum escrow with real ETH
       console.log('[RESOLVER] Step 5: Funding Ethereum escrow with real ETH...');

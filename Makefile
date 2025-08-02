@@ -185,9 +185,35 @@ thunder: setup
 	@cd thunder-cli && npm run build > /dev/null 2>&1
 	@cd thunder-cli && node dist/cli.js --demo
 
-# Real blockchain swap on testnet
+# Real blockchain swap on testnet with real balance tracking (uses local services)
 swap-testnet: check-testnet-config
-	@./scripts/swap-testnet.sh
+	@echo "$(YELLOW)⚡ Running testnet swap with balance tracking (local services)...$(NC)"
+	@echo "$(CYAN)Using testnet wallet addresses from doc/testnet-wallets/$(NC)"
+	@echo "$(YELLOW)Note: This uses local Bitcoin regtest and Hardhat for development$(NC)"
+	@./scripts/swap-testnet-wrapper.sh
+
+# Real testnet swap - connects to actual Bitcoin testnet3 and Ethereum Sepolia
+swap-testnet-real: check-testnet-config
+	@echo "$(RED)════════════════════════════════════════════════════════════$(NC)"
+	@echo "$(RED)⚠️  REAL TESTNET MODE - Requires actual testnet funds$(NC)"
+	@echo "$(RED)════════════════════════════════════════════════════════════$(NC)"
+	@echo ""
+	@echo "$(YELLOW)This command connects to:$(NC)"
+	@echo "  • Bitcoin testnet3 (real network)"
+	@echo "  • Ethereum Sepolia (real network)"
+	@echo ""
+	@echo "$(YELLOW)Requirements:$(NC)"
+	@echo "  • Bitcoin testnet balance: 0.001+ BTC"
+	@echo "  • Ethereum Sepolia balance: 0.01+ ETH"
+	@echo "  • Deployed contracts on Sepolia"
+	@echo ""
+	@echo "$(CYAN)Checking testnet balances...$(NC)"
+	@node scripts/check-testnet-balances.js
+	@echo ""
+	@echo "$(YELLOW)Press Ctrl+C to cancel or Enter to continue...$(NC)"
+	@read -p ""
+	@echo "$(GREEN)Starting real testnet swap...$(NC)"
+	@node scripts/real-testnet-swap.js
 
 # Sepolia contract demo (safe, doesn't modify services)
 demo-sepolia:

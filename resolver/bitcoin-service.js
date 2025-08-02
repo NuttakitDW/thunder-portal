@@ -19,7 +19,7 @@ class BitcoinService {
     const auth = Buffer.from(`${this.rpcUser}:${this.rpcPassword}`).toString('base64');
     
     // Add wallet to RPC URL if it's a wallet-specific call
-    const walletMethods = ['listunspent', 'sendrawtransaction', 'getnewaddress', 'getbalance', 'listwallets'];
+    const walletMethods = ['listunspent', 'sendrawtransaction', 'getnewaddress', 'getbalance', 'listwallets', 'listtransactions', 'importaddress', 'gettransaction'];
     const url = walletMethods.includes(method) ? `${this.rpcUrl}/wallet/${this.wallet}` : this.rpcUrl;
     
     try {
@@ -258,6 +258,62 @@ class BitcoinService {
         error: error.message
       };
     }
+  }
+
+  /**
+   * Get balance for a specific address
+   */
+  async getBalance(address) {
+    try {
+      const unspent = await this.listUnspent(0, 9999999, [address]);
+      return unspent.reduce((sum, utxo) => sum + utxo.amount, 0);
+    } catch (error) {
+      console.error('[BITCOIN-SERVICE] Failed to get balance:', error.message);
+      return 0;
+    }
+  }
+
+  /**
+   * Get transactions for a specific address
+   */
+  async getTransactions(address) {
+    try {
+      // Try to import address as watch-only (may fail if already imported)
+      try {
+        await this.rpcCall('importaddress', [address, '', false]);
+      } catch (importError) {
+        // Ignore import errors - address might already be imported
+      }
+      
+      // Get all transactions
+      const allTxs = await this.rpcCall('listtransactions', ['*', 100, 0, true]);
+      
+      // Filter for the specific address
+      return allTxs.filter(tx => tx.address === address);
+    } catch (error) {
+      console.error('[BITCOIN-SERVICE] Failed to get transactions:', error.message);
+      return [];
+    }
+  }
+
+  /**
+   * Get detailed transaction information
+   */
+  async getTransactionDetails(txid) {
+    try {
+      const tx = await this.rpcCall('gettransaction', [txid, true]);
+      return tx;
+    } catch (error) {
+      console.error('[BITCOIN-SERVICE] Failed to get transaction details:', error.message);
+      return null;
+    }
+  }
+
+  /**
+   * Alias for rpcCall to maintain compatibility
+   */
+  async rpc(method, params = []) {
+    return this.rpcCall(method, params);
   }
 }
 
