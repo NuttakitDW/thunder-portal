@@ -1,7 +1,7 @@
 # Thunder Portal Demo Makefile
-# Simplifies demo setup and execution
+# Focused on hackathon demo success
 
-.PHONY: setup start demo clean restart help all
+.PHONY: setup start stop clean restart help all thunder swap-testnet
 
 # Default target
 all: help
@@ -9,6 +9,7 @@ all: help
 # Colors for output
 GREEN := \033[0;32m
 YELLOW := \033[1;33m
+CYAN := \033[0;36m
 RED := \033[0;31m
 NC := \033[0m # No Color
 
@@ -16,26 +17,18 @@ NC := \033[0m # No Color
 help:
 	@echo "$(GREEN)⚡ Thunder Portal Commands:$(NC)"
 	@echo ""
-	@echo "$(YELLOW)Quick Start:$(NC)"
-	@echo "  make thunder  - One-command setup + start + CLI demo"
+	@echo "$(YELLOW)Main Commands:$(NC)"
+	@echo "  make thunder      - Mock demo with beautiful UI (recommended)"
+	@echo "  make swap-testnet - Real blockchain swap (BTC testnet ⟷ ETH Sepolia)"
 	@echo ""
-	@echo "$(CYAN)Basic Commands:$(NC)"
-	@echo "  make setup    - Install all dependencies"
-	@echo "  make start    - Start all services (Bitcoin, Ethereum, Backend)"
-	@echo "  make stop     - Stop all services"
-	@echo "  make clean    - Clean everything and reset"
-	@echo "  make restart  - Stop, clean, and start fresh"
-	@echo ""
-	@echo "$(CYAN)Thunder CLI:$(NC)"
-	@echo "  make cli      - Run Thunder CLI (production mode)"
-	@echo "  make cli-demo - Run Thunder CLI in demo mode"
-	@echo "  make cli-judge - Special demo for hackathon judges"
-	@echo ""
-	@echo "$(CYAN)Testing:$(NC)"
-	@echo "  make test-contracts - Test smart contracts"
-	@echo "  make test-swap - Test complete swap flow"
-	@echo ""
-	@echo "$(YELLOW)Recommended: make thunder$(NC)"
+	@echo "$(CYAN)Supporting Commands:$(NC)"
+	@echo "  make setup        - Install all dependencies"
+	@echo "  make start        - Start all services"
+	@echo "  make stop         - Stop all services"
+	@echo "  make clean        - Clean everything and reset"
+	@echo "  make restart      - Stop, clean, and start fresh"
+	@echo "  make status       - Check service status"
+	@echo "  make logs         - View service logs"
 
 # Setup dependencies and environment
 setup:
@@ -91,9 +84,9 @@ start:
 		echo "  • Simple Escrow Factory: $(GREEN)$$(cat deployments/simple-escrow-factory.json 2>/dev/null | jq -r '.contracts.SimpleEscrowFactory.address' || echo "Check deployment")$(NC)"; \
 		echo "  • Cross-Chain Factory:   $(GREEN)$$(cat evm-resolver/deployments/simple-escrow-factory-local.json 2>/dev/null | grep -o '"address": "[^"]*"' | head -1 | cut -d'"' -f4 || echo "Check deployment")$(NC)"; \
 		echo ""; \
-		echo "$(YELLOW)To run the demo:$(NC)"; \
-		echo "  $(GREEN)make demo$(NC) - Simulated demo with partial fulfillment"; \
-		echo "  $(GREEN)make demo-real$(NC) - Real blockchain demo with 1inch integration"; \
+		echo "$(YELLOW)Ready to run:$(NC)"; \
+		echo "  $(GREEN)make thunder$(NC) - Beautiful mock demo with UI"; \
+		echo "  $(GREEN)make swap-testnet$(NC) - Real blockchain swap (coming soon)"; \
 	else \
 		echo "$(RED)════════════════════════════════════════════════════════════$(NC)"; \
 		echo "$(RED)❌ Some services failed to start!$(NC)"; \
@@ -108,15 +101,16 @@ start:
 		exit 1; \
 	fi
 
-# Run the atomic swap demo (simulated with partial fulfillment)
-demo:
-	@echo "$(YELLOW)⚡ Running Thunder Portal Atomic Swap Demo...$(NC)"
-	@./demo/atomic-swap-demo.sh
-
-# Run the real atomic swap demo with actual blockchain transactions and 1inch Limit Order Protocol
-demo-real:
-	@echo "$(YELLOW)⚡ Running Thunder Portal REAL Atomic Swap Demo with 1inch Integration...$(NC)"
-	@./demo/real-atomic-swap-demo.sh
+# Stop all services
+stop:
+	@echo "$(YELLOW)🛑 Stopping Thunder Portal services...$(NC)"
+	@./demo/stop-all-services.sh 2>/dev/null || true
+	@pkill -f "node.*relayer" 2>/dev/null || true
+	@pkill -f "node.*resolver" 2>/dev/null || true
+	@pkill -f "hardhat node" 2>/dev/null || true
+	@pkill -f "thunder-portal" 2>/dev/null || true
+	@lsof -ti:3000-3002,8545 | xargs kill -9 2>/dev/null || true
+	@echo "$(GREEN)✅ Services stopped$(NC)"
 
 # Stop all services and clean up
 clean:
@@ -163,47 +157,28 @@ status:
 	@curl -s http://localhost:8545 > /dev/null && echo "✅ Ethereum: Running" || echo "❌ Ethereum: Not running"
 	@curl -s --user thunderportal:thunderportal123 http://127.0.0.1:18443/ -X POST -d '{"method":"getblockchaininfo"}' > /dev/null 2>&1 && echo "✅ Bitcoin: Running" || echo "❌ Bitcoin: Not running"
 
-# Test individual components
-test-bitcoin:
-	@echo "$(YELLOW)Testing Bitcoin HTLC API...$(NC)"
-	@curl -s -H "X-API-Key: demo-key-123" http://localhost:3000/v1/health | jq '.'
-
-test-contracts:
-	@echo "$(YELLOW)Testing smart contracts...$(NC)"
-	@cd evm-resolver && forge test -vv
-
-# Thunder CLI build command
-cli-build:
-	@echo "$(YELLOW)Building Thunder Portal CLI...$(NC)"
-	@cd thunder-cli && npm install && npm run build
-
-cli-install:
-	@echo "$(YELLOW)Installing Thunder Portal CLI globally...$(NC)"
-	@cd thunder-cli && npm install -g .
-
-test-complete-swap:
-	@echo "$(YELLOW)Testing complete atomic swap functionality...$(NC)"
-	@node scripts/test-complete-swap.js
-
-# Thunder CLI commands
-cli: cli-build
-	@echo "$(YELLOW)⚡ Starting Thunder Portal CLI...$(NC)"
-	@echo "Make sure services are running with: make start"
-	@cd thunder-cli && node dist/cli.js
-
-cli-demo: cli-build
-	@echo "$(YELLOW)⚡ Starting Thunder Portal CLI in demo mode...$(NC)"
-	@echo "$(GREEN)Demo mode uses test networks but real service connections$(NC)"
-	@cd thunder-cli && node dist/cli.js --demo
-
-cli-judge: cli-build
-	@echo "$(YELLOW)⚡ Running Thunder Portal CLI Demo for Judges...$(NC)"
-	@cd thunder-cli && ./demo-judge.sh
-
-# Quick command to start everything and run CLI
+# Main command: Beautiful mock demo with UI
 thunder: setup start
 	@echo "$(YELLOW)⚡ Thunder Portal is ready!$(NC)"
-	@echo "Starting CLI in 5 seconds..."
+	@echo "Starting Thunder CLI demo in 5 seconds..."
 	@sleep 5
-	@make cli-demo
+	@echo "$(YELLOW)⚡ Starting Thunder Portal CLI in demo mode...$(NC)"
+	@echo "$(GREEN)Demo mode showcases the beautiful UI with mock transactions$(NC)"
+	@cd thunder-cli && npm run build > /dev/null 2>&1
+	@cd thunder-cli && node dist/cli.js --demo
+
+# Real blockchain swap on testnet
+swap-testnet:
+	@echo "$(YELLOW)⚡ Preparing real blockchain swap (BTC testnet ⟷ ETH Sepolia)...$(NC)"
+	@echo "$(CYAN)This will execute real transactions on testnet blockchains$(NC)"
+	@echo ""
+	@echo "$(YELLOW)Prerequisites:$(NC)"
+	@echo "  • Bitcoin testnet3 wallet with funds"
+	@echo "  • Ethereum Sepolia wallet with ETH"
+	@echo "  • Valid RPC endpoints configured"
+	@echo ""
+	@echo "$(RED)🚧 Under Construction 🚧$(NC)"
+	@echo "This feature is being implemented. Check doc/plan.md for progress."
+	@# TODO: Implement real testnet swap
+	@# ./scripts/swap-testnet.sh
 
