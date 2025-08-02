@@ -30,7 +30,7 @@ if curl -s --user thunderportal:thunderportal123 http://127.0.0.1:18443/ -X POST
 else
     echo "Starting Bitcoin..."
     cd "$PROJECT_ROOT"
-    docker-compose up -d bitcoin-regtest
+    docker compose up -d bitcoin-regtest
     sleep 5
 fi
 
