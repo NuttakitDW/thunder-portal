@@ -268,6 +268,8 @@ graph TB
 
 ## 🔧 Troubleshooting
 
+For comprehensive troubleshooting, see [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md).
+
 ### Common Issues
 
 #### 1. `make thunder` fails with "Cannot find module 'hardhat'"
