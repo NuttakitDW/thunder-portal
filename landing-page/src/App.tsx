@@ -14,7 +14,7 @@ const App = () => {
 
   return (
     <div className="bg-black min-h-screen flex justify-center">
-      <div className="w-2/3 p-2 bg-[#18181b]">
+      <div className="w-full md:w-2/3 p-2 bg-[#18181b]">
         <img src="/logos/logo-banner-transparent.png" alt="" />
         <div className="markdown-body">
         <ReactMarkdown>{markdown}</ReactMarkdown>

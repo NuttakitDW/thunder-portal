@@ -1,9 +1,15 @@
 @import "tailwindcss";
 
 html {
+  background-color: #18181b;
   scroll-behavior: smooth;
 }
 
 ::-webkit-scrollbar {
   display: none;
+}
+
+.markdown-body {
+  background-color: #18181b; /* dark background */
+  color: #f4f4f5; /* light text */
 }
