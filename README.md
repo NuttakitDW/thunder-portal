@@ -169,6 +169,41 @@ make swap-claim
 4. **Atomic Execution**: Reveal secret to claim both sides
 5. **No Trust Required**: Math guarantees fairness
 
+## 🔗 1inch Fusion+ Integration
+
+Thunder Portal extends the 1inch Fusion+ protocol to support native Bitcoin atomic swaps. Here's where we integrate:
+
+### Code Integration Points
+
+1. **Protocol Extension** ([README.md:3](https://github.com/NuttakitDW/thunder-portal/blob/master/README.md#L3))
+   - Extends 1inch Fusion+ to support Bitcoin through custom HTLC service
+
+2. **Limit Order Protocol Interface** ([contracts/LimitOrderProtocol.sol:6-8](https://github.com/NuttakitDW/thunder-portal/blob/master/contracts/LimitOrderProtocol.sol#L6-L8))
+   ```solidity
+   // Simplified interface to 1inch Limit Order Protocol
+   // Enables atomic swaps using 1inch's limit order infrastructure
+   ```
+
+3. **Resolver Integration** ([resolver/execute-real-swap-with-lop.js:69-87](https://github.com/NuttakitDW/thunder-portal/blob/master/resolver/execute-real-swap-with-lop.js#L69-L87))
+   ```javascript
+   // Registers swap with 1inch Limit Order Protocol
+   // Handles order matching and execution flow
+   ```
+
+4. **Cross-Chain Order Structure** ([evm-resolver/contracts/src/CrossChainOrder.sol:1-50](https://github.com/NuttakitDW/thunder-portal/blob/master/evm-resolver/contracts/src/CrossChainOrder.sol#L1-L50))
+   ```solidity
+   // Implements Fusion+ compatible order structure
+   // Adds Bitcoin HTLC support to standard order format
+   ```
+
+### Key Extensions
+
+- **Bitcoin HTLC Support**: Added native Bitcoin script generation to Fusion+ resolver pattern
+- **Cross-Chain Atomicity**: Extended order validation to ensure both Bitcoin and Ethereum sides execute atomically
+- **Order Chunking**: Leveraged Fusion+ liquidity aggregation for better price discovery
+
+The integration allows Bitcoin to work seamlessly within the 1inch ecosystem while maintaining the security guarantees of atomic swaps
+
 ## 🔑 Key Innovation
 
 - **No Bridges**: Direct Bitcoin ⟷ Ethereum swaps
