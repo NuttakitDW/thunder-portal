@@ -29,7 +29,8 @@ help:
 	@echo "  make restart      - Stop, clean, and start fresh"
 	@echo "  make status       - Check service status"
 	@echo "  make logs         - View service logs"
-	@echo "  make balances - Check all testnet wallet balances"
+	@echo "  make balances     - Check all testnet wallet balances"
+	@echo "  make htlc-start   - Start only Bitcoin HTLC service"
 
 # Setup dependencies and environment
 setup:
@@ -187,28 +188,7 @@ thunder: setup
 
 # Real blockchain swap on testnet - connects to actual testnets
 swap-testnet: check-testnet-config
-	@echo "$(YELLOW)⚡ Thunder Portal - Real Testnet Atomic Swap$(NC)"
-	@echo "$(CYAN)Connecting to Bitcoin testnet3 and Ethereum Sepolia$(NC)"
-	@echo ""
-	@# First check if services are running
-	@if ! curl -s http://localhost:3000/v1/health > /dev/null 2>&1; then \
-		echo "$(RED)❌ Bitcoin HTLC API not running!$(NC)"; \
-		echo "$(YELLOW)Starting services...$(NC)"; \
-		$(MAKE) start; \
-	fi
-	@echo ""
-	@# Check if contracts are deployed
-	@if [ ! -f "deployments/sepolia-deployment.json" ]; then \
-		echo "$(YELLOW)📄 Contracts not deployed to Sepolia yet$(NC)"; \
-		echo "Would you like to deploy now? (requires ~0.1 ETH)"; \
-		read -p "Deploy contracts? [y/N] " -n 1 -r; \
-		echo ""; \
-		if [[ $$REPLY =~ ^[Yy]$$ ]]; then \
-			node scripts/deploy-to-sepolia.js; \
-		fi \
-	fi
-	@echo ""
-	@node scripts/execute-real-testnet-swap.js
+	@./scripts/swap-testnet-with-checks.sh
 
 # Real testnet swap - connects to actual Bitcoin testnet3 and Ethereum Sepolia
 swap-testnet-real: check-testnet-config
@@ -259,4 +239,9 @@ check-testnet-config:
 balances:
 	@echo "$(YELLOW)💰 Checking Thunder Portal testnet wallet balances...$(NC)"
 	@node scripts/check-testnet-balances.js
+
+# Start only Bitcoin HTLC service
+htlc-start:
+	@./scripts/start-htlc-service.sh
+
 

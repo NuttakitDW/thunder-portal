@@ -1,0 +1,13 @@
+{
+  "preimage": "0x98a96d03c9bedf614c7ce93aff10ce3f9532fac1c22f648301413156b5514674",
+  "preimageHash": "0x9911e22d9aa045c6fdd236b2de4b01fe8df92b30952a642f1b73536f0f3f60d3",
+  "orderHash": "0x4383cb38a840eca42df83853f771f504168ac60ee7699d51d17fdb9c675d9ef7",
+  "escrowAddress": "0xB690C75F122237A012fbaDF650d6870CD00cfe55",
+  "htlcAddress": "2N26dtgWzsUc6hAc1dYP42e9WRUUcc3Spme",
+  "btcAmount": 0.0001,
+  "ethAmount": 0.001,
+  "creationTx": "0xe699590af86d2ad1c9a19195a1234688f5728ebe1c294b4e84446874e4db7f07",
+  "fundingTx": "0xa1d2cbe92c78f8a925355a8d8cb3645eb141b967f57025f218d4ae4ed8063fe7",
+  "timestamp": "2025-08-03T05:19:02.541Z",
+  "status": "awaiting_btc_funding"
+}
