@@ -34,18 +34,20 @@ help:
 # Setup dependencies and environment
 setup:
 	@echo "$(YELLOW)📦 Setting up Thunder Portal environment...$(NC)"
-	@echo "1️⃣  Installing Node dependencies..."
+	@echo "1️⃣  Installing root dependencies..."
+	@npm install --legacy-peer-deps
+	@echo "2️⃣  Installing service dependencies..."
 	@cd evm-resolver && npm install
 	@cd relayer && npm install
 	@cd resolver && npm install
 	@cd thunder-cli && npm install
-	@echo "2️⃣  Setting up Bitcoin HTLC service..."
+	@echo "3️⃣  Setting up Bitcoin HTLC service..."
 	@cd bitcoin-htlc && make setup
-	@echo "2️⃣  Building Bitcoin HTLC service..."
+	@echo "4️⃣  Building Bitcoin HTLC service..."
 	@cd bitcoin-htlc && make build
-	@echo "3️⃣  Building Thunder CLI..."
+	@echo "5️⃣  Building Thunder CLI..."
 	@cd thunder-cli && npm run build
-	@echo "4️⃣  Creating necessary directories..."
+	@echo "6️⃣  Creating necessary directories..."
 	@mkdir -p logs data/bitcoin/regtest
 	@echo "$(GREEN)✅ Setup complete!$(NC)"
 
