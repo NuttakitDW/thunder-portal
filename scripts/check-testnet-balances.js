@@ -208,16 +208,51 @@ async function checkAllBalances() {
     console.log(`Bitcoin wallets funded: ${btcFunded}/3`);
     console.log(`Ethereum wallets funded: ${ethFunded}/3`);
     
-    // Required funding
-    console.log(`\n${colors.yellow}💰 Required Funding (Minimal Demo):${colors.reset}`);
-    console.log('Bitcoin Maker: 0.001 BTC (currently: ' + 
-        (btcResults.find(r => r.role.includes('Maker'))?.balance || 'Unknown') + ')');
-    console.log('Bitcoin Resolver: 0.01 BTC (currently: ' + 
-        (btcResults.find(r => r.role.includes('Resolver'))?.balance || 'Unknown') + ')');
-    console.log('Ethereum Resolver: 0.5-1 ETH (currently: ' + 
-        (ethResults.find(r => r.role.includes('Resolver'))?.balance || 'Unknown') + ')');
-    console.log('Ethereum Taker: 0.1-0.5 ETH (currently: ' + 
-        (ethResults.find(r => r.role.includes('Taker'))?.balance || 'Unknown') + ')');
+    // Required funding for atomic swap
+    console.log(`\n${colors.yellow}💰 Required Funding for Atomic Swap:${colors.reset}`);
+    console.log('='.repeat(80));
+    
+    // Check specific requirements
+    const btcMaker = btcResults.find(r => r.role.includes('Maker'));
+    const ethResolver = ethResults.find(r => r.role.includes('Resolver'));
+    const ethTaker = ethResults.find(r => r.role.includes('Taker'));
+    
+    // Bitcoin Maker check
+    const btcMakerBalance = btcMaker ? parseFloat(btcMaker.balance) : 0;
+    const btcMakerRequired = 0.0001;
+    const btcMakerStatus = btcMakerBalance >= btcMakerRequired ? '✅' : '❌';
+    console.log(`Bitcoin Maker: ${btcMakerStatus} ${btcMakerRequired} BTC needed (has: ${btcMaker?.balance || 'Unknown'})`);
+    
+    // Ethereum Resolver check (needs gas for creating escrow)
+    const ethResolverBalance = ethResolver ? parseFloat(ethResolver.balance) : 0;
+    const ethResolverRequired = 0.02; // For gas fees
+    const ethResolverStatus = ethResolverBalance >= ethResolverRequired ? '✅' : '❌';
+    console.log(`Ethereum Resolver: ${ethResolverStatus} ${ethResolverRequired} ETH needed for gas (has: ${ethResolver?.balance || 'Unknown'})`);
+    
+    // Ethereum Taker check
+    const ethTakerBalance = ethTaker ? parseFloat(ethTaker.balance) : 0;
+    const ethTakerRequired = 0.002; // 0.001 ETH for swap + gas
+    const ethTakerStatus = ethTakerBalance >= ethTakerRequired ? '✅' : '❌';
+    console.log(`Ethereum Taker: ${ethTakerStatus} ${ethTakerRequired} ETH needed (has: ${ethTaker?.balance || 'Unknown'})`);
+    
+    // Show specific funding needs
+    if (btcMakerStatus === '❌' || ethResolverStatus === '❌' || ethTakerStatus === '❌') {
+        console.log(`\n${colors.red}⚠️  Action Required:${colors.reset}`);
+        if (ethResolverStatus === '❌') {
+            console.log(`${colors.yellow}The Ethereum Resolver wallet needs at least ${ethResolverRequired} ETH for gas fees${colors.reset}`);
+            console.log(`Fund this address: ${colors.cyan}${wallets.ethereum.resolver}${colors.reset}`);
+        }
+        if (btcMakerStatus === '❌') {
+            console.log(`${colors.yellow}The Bitcoin Maker wallet needs at least ${btcMakerRequired} BTC${colors.reset}`);
+            console.log(`Fund this address: ${colors.cyan}${wallets.bitcoin.maker}${colors.reset}`);
+        }
+        if (ethTakerStatus === '❌') {
+            console.log(`${colors.yellow}The Ethereum Taker wallet needs at least ${ethTakerRequired} ETH${colors.reset}`);
+            console.log(`Fund this address: ${colors.cyan}${wallets.ethereum.taker}${colors.reset}`);
+        }
+    } else {
+        console.log(`\n${colors.green}✅ All wallets have sufficient funds for atomic swap!${colors.reset}`);
+    }
     
     // Faucet links if any wallet is empty
     if (btcFunded < 3 || ethFunded < 3) {

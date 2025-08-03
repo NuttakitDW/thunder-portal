@@ -97,6 +97,18 @@ async function executeRealSwap() {
             log('red', '\n❌ Insufficient ETH in taker wallet (need 0.001)');
             return;
         }
+        // Check if resolver has enough ETH for gas fees
+        if (parseFloat(ethResolver.balanceETH) < 0.01) {
+            log('red', '\n❌ Insufficient ETH in resolver wallet for gas fees');
+            log('yellow', '\n💡 The Resolver wallet needs ETH to pay for transaction gas fees.');
+            log('yellow', '   Please fund the following address with at least 0.01 ETH on Sepolia:');
+            log('cyan', `   ${wallets.ethereum.resolver.address}`);
+            log('yellow', '\n   You can get Sepolia ETH from:');
+            log('cyan', '   • https://sepoliafaucet.com/');
+            log('cyan', '   • https://www.alchemy.com/faucets/ethereum-sepolia');
+            log('cyan', '   • https://cloud.google.com/application/web3/faucet/ethereum/sepolia');
+            return;
+        }
 
         // Step 3: Create swap parameters
         const swapAmount = {
@@ -289,8 +301,21 @@ async function executeRealSwap() {
             console.log(`\n💾 Swap details saved to: ${swapFile}`);
             
         } catch (error) {
-            log('red', `\n❌ Error creating escrow: ${error.message}`);
-            console.error('Full error:', error);
+            if (error.code === 'INSUFFICIENT_FUNDS') {
+                log('red', '\n❌ Insufficient funds for transaction gas');
+                log('yellow', '\n💡 The Resolver wallet needs ETH to pay for gas fees.');
+                log('yellow', '   Current balance: 0 ETH');
+                log('yellow', '   Required: At least 0.01 ETH for gas fees');
+                log('cyan', `\n   Please fund this address: ${signer.address}`);
+                log('yellow', '\n   You can get Sepolia ETH from:');
+                log('cyan', '   • https://sepoliafaucet.com/');
+                log('cyan', '   • https://www.alchemy.com/faucets/ethereum-sepolia');
+                log('cyan', '   • https://cloud.google.com/application/web3/faucet/ethereum/sepolia');
+                log('yellow', '\n   After funding, run: make swap-testnet');
+            } else {
+                log('red', `\n❌ Error creating escrow: ${error.message}`);
+                console.error('Full error:', error);
+            }
         }
 
         // Step 6: Show swap status

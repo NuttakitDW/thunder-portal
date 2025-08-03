@@ -1,13 +1,13 @@
 {
-  "preimage": "0x98a96d03c9bedf614c7ce93aff10ce3f9532fac1c22f648301413156b5514674",
-  "preimageHash": "0x9911e22d9aa045c6fdd236b2de4b01fe8df92b30952a642f1b73536f0f3f60d3",
-  "orderHash": "0x4383cb38a840eca42df83853f771f504168ac60ee7699d51d17fdb9c675d9ef7",
-  "escrowAddress": "0xB690C75F122237A012fbaDF650d6870CD00cfe55",
-  "htlcAddress": "2N26dtgWzsUc6hAc1dYP42e9WRUUcc3Spme",
+  "preimage": "0x14f5592a33a75f70ebce6dc66f0d2a9e77bb331bad2f189c4cc294a12fa0e437",
+  "preimageHash": "0x1fdd075aab030168ddd29d3b255c1cd208db682e9894f2e171bd8d4a6d2f3219",
+  "orderHash": "0xa889eacff7959b0748b11f34fbf310336c3831b76603b5989d64955a222eea91",
+  "escrowAddress": "0x1b337E9DD865828cc90D41CE6a02Bb831a09ed1E",
+  "htlcAddress": "2Mw23kiSX2Pmkr7HPf3gg67wFqDMVcSTyYS",
   "btcAmount": 0.0001,
   "ethAmount": 0.001,
-  "creationTx": "0xe699590af86d2ad1c9a19195a1234688f5728ebe1c294b4e84446874e4db7f07",
-  "fundingTx": "0xa1d2cbe92c78f8a925355a8d8cb3645eb141b967f57025f218d4ae4ed8063fe7",
-  "timestamp": "2025-08-03T05:19:02.541Z",
+  "creationTx": "0xfca4fa1e6127e8336f3fe8a0092031606dc15a4f10a04473b4801eb4bc6751f2",
+  "fundingTx": "0xfb9c8321e872962cff633db3f465feccd1fb6aa79d9c2784732d13bb258fb637",
+  "timestamp": "2025-08-03T11:10:01.566Z",
   "status": "awaiting_btc_funding"
 }
