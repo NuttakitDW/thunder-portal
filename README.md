@@ -8,7 +8,7 @@
 - Git
 - Node.js 18+
 - Rust 1.70+ (for Bitcoin HTLC service)
-- Docker (only for `make thunder` demo)
+- Docker
 
 ### Clone and Setup
 
@@ -151,7 +151,6 @@ Swap: 0.0001 BTC ⟷ 0.001 ETH
 | "Insufficient balance" | Get testnet funds from faucets above |
 | "Network timeout" | Check internet connection, try again |
 | "Contract deployment failed" | Ensure you have enough ETH for gas |
-| Other issues | See [docs/TESTNET-TROUBLESHOOTING.md](docs/TESTNET-TROUBLESHOOTING.md) |
 
 ### Complete the Swap
 
@@ -403,8 +402,6 @@ graph TB
 ---
 
 ## 🔧 Troubleshooting
-
-For comprehensive troubleshooting, see [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md).
 
 ### Common Issues
 

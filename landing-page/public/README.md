@@ -6,8 +6,8 @@ Trustless atomic swaps between Bitcoin and Ethereum. No bridges, no wrapped toke
 ### Prerequisites
 - Git
 - Node.js 18+
-- Rust 1.70+
-- Docker (for local blockchain nodes)
+- Rust 1.70+ (for Bitcoin HTLC service)
+- Docker
 
 ### Clone and Setup
 
@@ -16,16 +16,29 @@ Trustless atomic swaps between Bitcoin and Ethereum. No bridges, no wrapped toke
 git clone https://github.com/NuttakitDW/thunder-portal.git
 cd thunder-portal
 
-# Option 1: Interactive Demo (Recommended)
-make thunder
+# Install dependencies
+make setup
+```
 
-# Option 2: Real Testnet Demo (Coming Soon)
+### Option 1: Interactive Demo (Fastest)
+```bash
+make thunder
+```
+
+### Option 2: Real Testnet Swap
+```bash
+# 1. Configure environment (one-time setup)
+cp .env.testnet.example .env.testnet
+# Edit .env.testnet to add private keys or use provided test wallets
+
+# 2. Start HTLC service (optional but recommended)
+make htlc-start
+
+# 3. Run the swap
 make swap-testnet
 ```
 
 ## 🔧 Troubleshooting
-
-For comprehensive troubleshooting, see [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md).
 
 ### Common Issues
 
