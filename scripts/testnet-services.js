@@ -18,8 +18,8 @@ const wallets = JSON.parse(fs.readFileSync(walletsFile, 'utf8'));
 
 class TestnetServices {
     constructor() {
-        // Bitcoin configuration
-        this.bitcoinApi = testnetConfig.bitcoin.rpc.public[0];
+        // Bitcoin configuration - try second API due to timeout issues
+        this.bitcoinApi = testnetConfig.bitcoin.rpc.public[1];
         this.bitcoinExplorer = testnetConfig.bitcoin.explorer;
         
         // Ethereum configuration
@@ -37,22 +37,30 @@ class TestnetServices {
     // Bitcoin Methods
     async getBitcoinBalance(address) {
         try {
-            const url = `${this.bitcoinApi}/address/${address}`;
+            const url = `${this.bitcoinApi}/addrs/${address}/balance`;
             console.log(`Fetching Bitcoin balance from: ${url}`);
-            const response = await axios.get(url);
+            const response = await axios.get(url, {
+                timeout: 10000,
+                headers: {
+                    'Accept': 'application/json',
+                    'User-Agent': 'ThunderPortal/1.0'
+                }
+            });
             const data = response.data;
-            const balance = data.chain_stats.funded_txo_sum - data.chain_stats.spent_txo_sum;
+            // BlockCypher returns balance in satoshis
+            const balance = data.balance || 0;
             return {
                 balance: balance,
                 balanceBTC: balance / 100000000,
-                txCount: data.chain_stats.tx_count
+                txCount: data.n_tx || 0
             };
         } catch (error) {
             console.error('Bitcoin API error details:', {
                 message: error.message,
                 response: error.response?.data,
                 status: error.response?.status,
-                config: error.config?.url
+                config: error.config?.url,
+                code: error.code
             });
             throw new Error(`Failed to get Bitcoin balance: ${error.message || 'Unknown error'}`);
         }

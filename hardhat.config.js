@@ -1,6 +1,7 @@
 
-require("dotenv").config({ path: "./doc/testnet-wallets/.env.testnet" });
+require("dotenv").config({ path: "./.env.testnet" });
 require("@nomicfoundation/hardhat-toolbox");
+require("@nomicfoundation/hardhat-verify");
 
 /** @type import('hardhat/config').HardhatUserConfig */
 module.exports = {
@@ -56,6 +57,11 @@ module.exports = {
       chainId: 11155111,
       gas: "auto",
       gasPrice: "auto"
+    }
+  },
+  etherscan: {
+    apiKey: {
+      sepolia: process.env.ETHERSCAN_API_KEY || "94GB5WHZZ6FWJK7VGIMWZCRFNSZK7HA4QJ"
     }
   }
 };
