@@ -29,7 +29,8 @@ help:
 	@echo "  make restart      - Stop, clean, and start fresh"
 	@echo "  make status       - Check service status"
 	@echo "  make logs         - View service logs"
-	@echo "  make balances - Check all testnet wallet balances"
+	@echo "  make balances     - Check all testnet wallet balances"
+	@echo "  make htlc-start   - Start only Bitcoin HTLC service"
 
 # Setup dependencies and environment
 setup:
@@ -185,9 +186,32 @@ thunder: setup
 	@cd thunder-cli && npm run build > /dev/null 2>&1
 	@cd thunder-cli && node dist/cli.js --demo
 
-# Real blockchain swap on testnet
+# Real blockchain swap on testnet - connects to actual testnets
 swap-testnet: check-testnet-config
-	@./scripts/swap-testnet.sh
+	@./scripts/swap-testnet-with-checks.sh
+
+# Real testnet swap - connects to actual Bitcoin testnet3 and Ethereum Sepolia
+swap-testnet-real: check-testnet-config
+	@echo "$(RED)════════════════════════════════════════════════════════════$(NC)"
+	@echo "$(RED)⚠️  REAL TESTNET MODE - Requires actual testnet funds$(NC)"
+	@echo "$(RED)════════════════════════════════════════════════════════════$(NC)"
+	@echo ""
+	@echo "$(YELLOW)This command connects to:$(NC)"
+	@echo "  • Bitcoin testnet3 (real network)"
+	@echo "  • Ethereum Sepolia (real network)"
+	@echo ""
+	@echo "$(YELLOW)Requirements:$(NC)"
+	@echo "  • Bitcoin testnet balance: 0.001+ BTC"
+	@echo "  • Ethereum Sepolia balance: 0.01+ ETH"
+	@echo "  • Deployed contracts on Sepolia"
+	@echo ""
+	@echo "$(CYAN)Checking testnet balances...$(NC)"
+	@node scripts/check-testnet-balances.js
+	@echo ""
+	@echo "$(YELLOW)Press Ctrl+C to cancel or Enter to continue...$(NC)"
+	@read -p ""
+	@echo "$(GREEN)Starting real testnet swap...$(NC)"
+	@node scripts/real-testnet-swap.js
 
 # Sepolia contract demo (safe, doesn't modify services)
 demo-sepolia:
@@ -215,4 +239,9 @@ check-testnet-config:
 balances:
 	@echo "$(YELLOW)💰 Checking Thunder Portal testnet wallet balances...$(NC)"
 	@node scripts/check-testnet-balances.js
+
+# Start only Bitcoin HTLC service
+htlc-start:
+	@./scripts/start-htlc-service.sh
+
 

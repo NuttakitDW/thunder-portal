@@ -9,6 +9,9 @@ const BitcoinService = require('./bitcoin-service');
 const executeRealSwap = require('./execute-real-swap');
 const executeRealSwapWithLOP = require('./execute-real-swap-with-lop');
 const executeRealPartialSwap = require('./execute-real-partial-swap');
+const SwapReportService = require('./swap-report-service');
+const createSwapReportRoutes = require('./swap-report-routes');
+const executeRealSwapWithReporting = require('./execute-real-swap-with-reporting');
 
 // Configuration
 const BITCOIN_API = 'http://localhost:3000/v1';
@@ -22,6 +25,10 @@ const bitcoinService = new BitcoinService();
 // Ethereum setup
 const provider = new ethers.JsonRpcProvider(ETHEREUM_RPC);
 const resolver = new ethers.Wallet('0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d', provider);
+
+// Initialize swap report service
+const swapReportService = new SwapReportService(bitcoinService, provider);
+swapReportService.init();
 
 // Escrow ABI
 const ESCROW_ABI = [
@@ -41,7 +48,7 @@ const FACTORY_ABI = [
 const path = require('path');
 const fs = require('fs');
 
-let FACTORY_ADDRESS = "0x5FbDB2315678afecb367f032d93F642f64180aa3"; // fallback
+let FACTORY_ADDRESS = "0x610178dA211FEF7D417bC0e6FeD39F05609AD788"; // fallback
 try {
   const deploymentPath = path.join(__dirname, '../deployments/simple-escrow-factory.json');
   const fallbackPath = path.join(__dirname, '../evm-resolver/deployments/simple-escrow-factory-local.json');
@@ -64,6 +71,10 @@ try {
 // Express app
 const app = express();
 app.use(express.json());
+
+// Add swap report routes
+const reportRoutes = createSwapReportRoutes(swapReportService);
+app.use('/api/reports', reportRoutes);
 
 // Active orders being resolved
 const activeOrders = new Map();
@@ -191,7 +202,7 @@ app.get('/escrow-status/:escrowAddress', async (req, res) => {
 });
 
 // Execute real atomic swap with actual blockchain transactions
-app.post('/execute-real-swap', executeRealSwap(bitcoinService, provider, resolver));
+app.post('/execute-real-swap', executeRealSwapWithReporting(bitcoinService, provider, resolver, swapReportService));
 
 // Execute real atomic swap with 1inch Limit Order Protocol integration
 app.post('/execute-real-swap-lop', executeRealSwapWithLOP(bitcoinService, provider, resolver));

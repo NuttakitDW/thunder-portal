@@ -1,0 +1,12 @@
+{
+  "network": "sepolia",
+  "chainId": 11155111,
+  "contracts": {
+    "SimpleEscrowFactory": {
+      "address": "0x61Ef17D94Aa8dE382FC5ccAEd668CB0b13f792bB",
+      "transactionHash": "0x2a392512ab673aa6cc474ee64e7d57af1a570a8bba28a5d738c93e50a11dba30",
+      "deployer": "0xF79e5800150C8DFB3730C9Da17a157dD9D53E6db",
+      "timestamp": "2025-08-02T21:11:53.292Z"
+    }
+  }
+}

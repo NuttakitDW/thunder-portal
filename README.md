@@ -7,8 +7,8 @@
 ### Prerequisites
 - Git
 - Node.js 18+
-- Rust 1.70+
-- Docker (for local blockchain nodes)
+- Rust 1.70+ (for Bitcoin HTLC service)
+- Docker (only for `make thunder` demo)
 
 ### Clone and Setup
 
@@ -17,10 +17,25 @@
 git clone https://github.com/NuttakitDW/thunder-portal.git
 cd thunder-portal
 
-# Option 1: Interactive Demo (Recommended)
-make thunder
+# Install dependencies
+make setup
+```
 
-# Option 2: Real Testnet Demo (Coming Soon)
+### Option 1: Interactive Demo (Fastest)
+```bash
+make thunder
+```
+
+### Option 2: Real Testnet Swap
+```bash
+# 1. Configure environment (one-time setup)
+cp .env.testnet.example .env.testnet
+# Edit .env.testnet to add private keys or use provided test wallets
+
+# 2. Start HTLC service (optional but recommended)
+make htlc-start
+
+# 3. Run the swap
 make swap-testnet
 ```
 
@@ -29,7 +44,7 @@ make swap-testnet
 | Command | Description | Time |
 |---------|-------------|------|
 | `make thunder` | Beautiful interactive CLI demo with visual atomic swap | 30 sec |
-| `make swap-testnet` | Real Bitcoin testnet ⟷ Ethereum Sepolia swap (coming soon) | 60 sec |
+| `make swap-testnet` | Real Bitcoin testnet3 ⟷ Ethereum Sepolia swap with on-chain transactions | 2-3 min |
 
 ### What You'll See with `make thunder`
 
@@ -58,6 +73,92 @@ Atomic execution...
 Transaction Details:
 • Bitcoin TX: abc123...
 • Ethereum TX: 0xdef456...
+```
+
+## 🌐 Real Testnet Swap Guide
+
+### Prerequisites for `make swap-testnet`
+
+1. **Environment Setup**
+   ```bash
+   # Install dependencies
+   make setup
+   
+   # Copy environment template
+   cp .env.testnet.example .env.testnet
+   ```
+
+2. **Configure Private Keys**
+   - Add your testnet private keys to `.env.testnet`
+   - Or use the provided test wallets in `doc/testnet-wallets/wallets-sensitive.json`
+
+3. **Get Testnet Funds**
+   - **Bitcoin testnet3**: https://coinfaucet.eu/en/btc-testnet/
+   - **Ethereum Sepolia**: https://sepoliafaucet.com/
+   - Minimum: 0.001 BTC and 0.01 ETH
+
+### Running the Testnet Swap
+
+```bash
+# Step 1: Start Bitcoin HTLC service (optional but recommended)
+make htlc-start
+
+# Step 2: Run the testnet swap
+make swap-testnet
+```
+
+### What Happens
+
+1. **Balance Check**: Verifies you have sufficient testnet funds
+2. **Bitcoin HTLC**: Creates HTLC address for atomic swap
+3. **Ethereum Escrow**: Deploys and funds escrow contract on Sepolia
+4. **Swap Details**: Saves to `deployments/active-swap.json`
+
+### Example Output
+
+```
+⚡ Thunder Portal - Real Testnet Atomic Swap
+════════════════════════════════════════════
+
+💰 Checking balances...
+Bitcoin Maker: 0.00157925 BTC
+Ethereum Resolver: 3.995 ETH
+
+🔧 Creating atomic swap...
+Swap: 0.0001 BTC ⟷ 0.001 ETH
+
+📘 Creating Ethereum Escrow...
+✅ Escrow created at: 0xB690C75F122237A012fbaDF650d6870CD00cfe55
+✅ Escrow funded with 0.001 ETH
+
+📋 Swap Status:
+1. ✅ Bitcoin HTLC created
+2. ⏳ Waiting for Bitcoin HTLC funding
+3. ✅ Ethereum escrow created and funded
+```
+
+### Verify Transactions
+
+- **Ethereum Escrow**: Check the contract on [Sepolia Etherscan](https://sepolia.etherscan.io)
+- **Bitcoin HTLC**: View on [Blockstream Testnet Explorer](https://blockstream.info/testnet)
+
+### Troubleshooting
+
+| Issue | Solution |
+|-------|----------|
+| "HTLC API not running" | Run `make htlc-start` in another terminal |
+| "Missing private keys" | Check `.env.testnet` has all required keys |
+| "Insufficient balance" | Get testnet funds from faucets above |
+| "Network timeout" | Check internet connection, try again |
+| "Contract deployment failed" | Ensure you have enough ETH for gas |
+| Other issues | See [docs/TESTNET-TROUBLESHOOTING.md](docs/TESTNET-TROUBLESHOOTING.md) |
+
+### Complete the Swap
+
+After funding the Bitcoin HTLC:
+```bash
+# Coming soon: Claim functionality
+make swap-claim
 ```
 
 ## 🏗️ How It Works

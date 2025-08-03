@@ -1,0 +1,20 @@
+{
+  "orderHash": "0xbd389548bc9e109269a3413c80e7a68469cb9347bef72823ba94a507f1f8edff",
+  "escrowAddress": "0xf69526A60195DC4eBb9C6Be66d449B930877d54a",
+  "htlcHashlock": "0x9da34a94599b8e90dfbe6e1f81c866db9c6004b2c8ec68f16cd234bebf93a6bd",
+  "htlcTimeout": 1754282608,
+  "ethAmount": "1000000000000000",
+  "preimage": "testpreimage123",
+  "maker": "0xF79e5800150C8DFB3730C9Da17a157dD9D53E6db",
+  "receiver": "0x4cDe35b45BE7E9982c51B5c2F44b79d0078D85BE",
+  "creator": "0xF79e5800150C8DFB3730C9Da17a157dD9D53E6db",
+  "transactionHash": "0x9ab345316e315e7eae02fb93fa5273819cadc60323c09c877d68d4ad9e84e363",
+  "blockNumber": 8901433,
+  "timestamp": "2025-08-03T04:43:40.660Z",
+  "network": "sepolia",
+  "factoryAddress": "0x61Ef17D94Aa8dE382FC5ccAEd668CB0b13f792bB",
+  "fundingTxHash": "0x9eca51a5d161817c73fafba9236b6f6f6c79d13d0eff18786c5a4f3a0f55469c",
+  "fundingBlockNumber": 8901438,
+  "fundedAt": "2025-08-03T04:44:40.794Z",
+  "status": "funded"
+}

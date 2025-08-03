@@ -1,0 +1,64 @@
+{
+  "description": "Real testnet service configuration for Thunder Portal",
+  "warning": "This configuration connects to real testnets. Ensure you have testnet funds before using.",
+  
+  "bitcoin": {
+    "network": "testnet3",
+    "rpc": {
+      "public": [
+        "https://blockstream.info/testnet/api",
+        "https://api.blockcypher.com/v1/btc/test3"
+      ],
+      "authenticated": {
+        "url": "https://bitcoin-testnet.public.blastapi.io",
+        "user": "public",
+        "password": "public"
+      }
+    },
+    "explorer": "https://blockstream.info/testnet",
+    "faucets": [
+      "https://coinfaucet.eu/en/btc-testnet/",
+      "https://bitcoinfaucet.uo1.net/",
+      "https://testnet-faucet.com/btc-testnet/"
+    ]
+  },
+  
+  "ethereum": {
+    "network": "sepolia",
+    "chainId": 11155111,
+    "rpc": {
+      "public": [
+        "https://rpc.ankr.com/eth_sepolia",
+        "https://ethereum-sepolia-rpc.publicnode.com",
+        "https://rpc.sepolia.org"
+      ],
+      "infura": "https://sepolia.infura.io/v3/7979b6b00e674dfabafcea1aac484f66"
+    },
+    "explorer": "https://sepolia.etherscan.io",
+    "faucets": [
+      "https://sepoliafaucet.com/",
+      "https://faucet.sepolia.dev/",
+      "https://sepolia-faucet.pk910.de/"
+    ]
+  },
+  
+  "contracts": {
+    "sepolia": {
+      "escrowFactory": null,
+      "note": "Contracts need to be deployed to Sepolia first"
+    }
+  },
+  
+  "requirements": {
+    "bitcoin": {
+      "minimum_balance": "0.001 BTC",
+      "recommended_balance": "0.01 BTC",
+      "reason": "For HTLC funding and transaction fees"
+    },
+    "ethereum": {
+      "minimum_balance": "0.01 ETH",
+      "recommended_balance": "0.1 ETH",
+      "reason": "For escrow funding and gas fees"
+    }
+  }
+}
